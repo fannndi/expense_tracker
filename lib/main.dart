@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'providers/settings_provider.dart';
 import 'routes/app_router.dart';
 import 'services/auto_fill_service.dart';
 import 'services/auto_fill_checker.dart';
@@ -65,12 +66,15 @@ class _StudentExpenseTrackerAppState
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: settings.themeMode,
+      locale: settings.locale,
+      supportedLocales: const [Locale('en'), Locale('id')],
       routerConfig: appRouter,
     );
   }

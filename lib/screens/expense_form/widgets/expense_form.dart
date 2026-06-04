@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_strings.dart';
 import '../../../models/expense.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/date_formatter.dart';
 
@@ -12,11 +15,11 @@ typedef OnSaveCallback = Future<void> Function({
   String? note,
 });
 
-class ExpenseForm extends StatefulWidget {
+class ExpenseForm extends ConsumerStatefulWidget {
   final Expense? initialExpense;
   final OnSaveCallback onSave;
   final bool loading;
-  /// Kalau true, amount 0 diperbolehkan (untuk edit auto-fill entry)
+  /// If true, amount 0 is allowed (for editing auto-fill entries).
   final bool allowZeroAmount;
 
   const ExpenseForm({
@@ -28,10 +31,10 @@ class ExpenseForm extends StatefulWidget {
   });
 
   @override
-  State<ExpenseForm> createState() => _ExpenseFormState();
+  ConsumerState<ExpenseForm> createState() => _ExpenseFormState();
 }
 
-class _ExpenseFormState extends State<ExpenseForm> {
+class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountCtrl;
   late final TextEditingController _noteCtrl;
@@ -46,8 +49,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
       text: e != null ? e.amount.toString() : '',
     );
     _noteCtrl = TextEditingController(text: e?.note ?? '');
-    _selectedCategory =
-        e?.category ?? AppConstants.categories.first;
+    _selectedCategory = e?.category ?? AppConstants.categories.first;
     _selectedDate = e?.date ?? DateTime.now();
   }
 
@@ -90,6 +92,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -103,20 +108,20 @@ class _ExpenseFormState extends State<ExpenseForm> {
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Amount (Rp)',
-                hintText: 'e.g. 15000',
+              decoration: InputDecoration(
+                labelText: s.amount,
+                hintText: s.amountHint,
                 prefixText: 'Rp ',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Amount is required';
+                if (v == null || v.trim().isEmpty) return s.amountRequired;
                 final n = int.tryParse(v.trim());
-                if (n == null) return 'Enter a valid number';
+                if (n == null) return s.enterValidNumber;
                 if (!widget.allowZeroAmount && n <= 0) {
-                  return 'Amount must be greater than 0';
+                  return s.amountGreaterThanZero;
                 }
-                if (n < 0) return 'Amount cannot be negative';
+                if (n < 0) return s.amountNotNegative;
                 return null;
               },
             ),
@@ -125,9 +130,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
             // Category dropdown
             DropdownButtonFormField<String>(
               initialValue: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s.categoryLabel,
+                border: const OutlineInputBorder(),
               ),
               items: AppConstants.categories.map((cat) {
                 return DropdownMenuItem(value: cat, child: Text(cat));
@@ -136,7 +141,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                 if (v != null) setState(() => _selectedCategory = v);
               },
               validator: (v) =>
-                  v == null || v.isEmpty ? 'Category is required' : null,
+                  v == null || v.isEmpty ? s.categoryRequired : null,
             ),
             const SizedBox(height: 16),
 
@@ -145,10 +150,10 @@ class _ExpenseFormState extends State<ExpenseForm> {
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(4),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today_outlined),
+                decoration: InputDecoration(
+                  labelText: s.date,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.calendar_today_outlined),
                 ),
                 child: Text(
                   DateFormatter.formatDisplay(_selectedDate),
@@ -161,10 +166,10 @@ class _ExpenseFormState extends State<ExpenseForm> {
             // Note field (optional)
             TextFormField(
               controller: _noteCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                hintText: 'e.g. Lunch with friends',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s.noteOptional,
+                hintText: s.noteHint,
+                border: const OutlineInputBorder(),
               ),
               maxLength: 100,
             ),
@@ -179,7 +184,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save'),
+                  : Text(s.save),
             ),
             const SizedBox(height: 12),
 
@@ -188,7 +193,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
               onPressed: widget.loading
                   ? null
                   : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(s.cancel),
             ),
           ],
         ),

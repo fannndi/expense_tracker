@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../providers/expense_providers.dart';
 import '../../providers/income_providers.dart';
+import '../../providers/settings_provider.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
-import 'widgets/monthly_trend_chart.dart';
 import 'widgets/category_analysis_card.dart';
-import 'widgets/report_card.dart';
 import 'widgets/income_expense_chart.dart';
+import 'widgets/monthly_trend_chart.dart';
+import 'widgets/report_card.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final selectedMonth = ref.watch(selectedMonthProvider);
     final trend = ref.watch(monthlyTrendProvider);
     final incomeTrend = ref.watch(monthlyIncomeTrendProvider);
@@ -28,7 +33,7 @@ class StatisticsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Statistics'),
+        title: Text(s.statistics),
       ),
       body: trend.when(
         loading: () => const LoadingView(),
@@ -44,6 +49,8 @@ class StatisticsScreen extends ConsumerWidget {
               data: (incomeData) => IncomeExpenseChart(
                 expenseSummaries: trendData,
                 incomeSummaries: incomeData,
+                incomeLabel: s.income,
+                spendingLabel: s.spending,
               ),
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
@@ -58,14 +65,15 @@ class StatisticsScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Monthly Spending Trend',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      s.monthlySpendingTrend,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Last 6 months',
+                      s.last6Months,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme
@@ -85,7 +93,7 @@ class StatisticsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
 
             // Monthly income vs expense summary
-            _MonthlyBalanceSummary(month: selectedMonth),
+            _MonthlyBalanceSummary(month: selectedMonth, strings: s),
             const SizedBox(height: 16),
 
             // Category analysis
@@ -152,12 +160,19 @@ class _MonthSelector extends ConsumerWidget {
 
 class _MonthlyBalanceSummary extends ConsumerWidget {
   final DateTime month;
+  final AppStrings strings;
 
-  const _MonthlyBalanceSummary({required this.month});
+  const _MonthlyBalanceSummary({
+    required this.month,
+    required this.strings,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = strings;
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     final incomeBreakdown = ref.watch(
       incomeBreakdownForMonthProvider(
         (year: month.year, month: month.month),
@@ -177,6 +192,8 @@ class _MonthlyBalanceSummary extends ConsumerWidget {
 
     if (totalIncome == 0 && totalExpense == 0) return const SizedBox.shrink();
 
+    final isPositive = balance >= 0;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -184,29 +201,30 @@ class _MonthlyBalanceSummary extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Monthly Summary',
+              s.monthlySummary,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             _SummaryRow(
-              label: 'Income',
+              label: s.income,
               value: CurrencyFormatter.format(totalIncome),
-              color: Colors.green.shade600,
+              color: cs.tertiary,
               icon: Icons.arrow_downward_rounded,
             ),
             _SummaryRow(
-              label: 'Spending',
+              label: s.spending,
               value: CurrencyFormatter.format(totalExpense),
-              color: Colors.red.shade600,
+              color: cs.error,
               icon: Icons.arrow_upward_rounded,
             ),
             const Divider(height: 20),
             _SummaryRow(
-              label: 'Balance',
-              value: '${balance >= 0 ? '+' : '-'}${CurrencyFormatter.format(balance.abs())}',
-              color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
-              icon: balance >= 0 ? Icons.trending_up : Icons.trending_down,
+              label: s.balance,
+              value:
+                  '${balance >= 0 ? '+' : '-'}${CurrencyFormatter.format(balance.abs())}',
+              color: isPositive ? cs.tertiary : cs.error,
+              icon: isPositive ? Icons.trending_up : Icons.trending_down,
               bold: true,
             ),
           ],

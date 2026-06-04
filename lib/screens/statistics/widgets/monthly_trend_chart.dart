@@ -1,20 +1,36 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_strings.dart';
 import '../../../models/monthly_summary.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
 
-class MonthlyTrendChart extends StatelessWidget {
+class MonthlyTrendChart extends ConsumerWidget {
   final List<MonthlySummary> summaries;
 
   const MonthlyTrendChart({super.key, required this.summaries});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
+
     if (summaries.isEmpty) {
-      return const SizedBox(height: 160, child: Center(child: Text('No data')));
+      return SizedBox(
+        height: 160,
+        child: Center(
+          child: Text(
+            s.noExpensesFound,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
     }
 
     final maxY = summaries.fold<double>(
@@ -111,9 +127,9 @@ class MonthlyTrendChart extends StatelessWidget {
                 return touchedSpots.map((spot) {
                   final index = spot.x.toInt();
                   if (index < 0 || index >= summaries.length) return null;
-                  final s = summaries[index];
+                  final entry = summaries[index];
                   return LineTooltipItem(
-                    '${DateFormatter.monthName(s.month)}\n${CurrencyFormatter.format(s.total)}',
+                    '${DateFormatter.monthName(entry.month)}\n${CurrencyFormatter.format(entry.total)}',
                     TextStyle(
                       color: theme.colorScheme.onPrimary,
                       fontSize: 12,

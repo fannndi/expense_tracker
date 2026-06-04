@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/expense.dart';
 import '../../providers/expense_providers.dart';
+import '../../providers/settings_provider.dart';
 import 'widgets/expense_form.dart';
 
 class EditExpenseScreen extends ConsumerStatefulWidget {
@@ -17,12 +19,18 @@ class EditExpenseScreen extends ConsumerStatefulWidget {
 class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
   bool _loading = false;
 
+  AppStrings get _s {
+    final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+    return settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+  }
+
   Future<void> _onSave({
     required int amount,
     required String category,
     required DateTime date,
     String? note,
   }) async {
+    final s = _s;
     setState(() => _loading = true);
     try {
       final updated = widget.expense.copyWith(
@@ -37,7 +45,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e')),
+          SnackBar(content: Text('${s.failedToUpdate}: $e')),
         );
       }
     } finally {
@@ -46,23 +54,23 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
   }
 
   Future<void> _onDelete() async {
+    final s = _s;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Expense'),
-        content: const Text(
-            'Are you sure you want to delete this expense? This action cannot be undone.'),
+        title: Text(s.deleteExpense),
+        content: Text(s.deleteExpenseConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(s.delete),
           ),
         ],
       ),
@@ -79,7 +87,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e')),
+          SnackBar(content: Text('${s.failedToDelete}: $e')),
         );
       }
     } finally {
@@ -89,23 +97,26 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Expense'),
+        title: Text(s.editExpense),
         actions: [
           IconButton(
             icon: Icon(
               Icons.delete_outline,
               color: Theme.of(context).colorScheme.error,
             ),
-            tooltip: 'Delete',
+            tooltip: s.delete,
             onPressed: _loading ? null : _onDelete,
           ),
         ],
       ),
       body: Column(
         children: [
-          // Banner khusus untuk auto-fill entry
+          // Banner for auto-fill entries
           if (widget.expense.isAutoFill)
             Container(
               width: double.infinity,
@@ -121,8 +132,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Entry ini dibuat otomatis karena tidak ada pengeluaran pada hari tersebut. '
-                      'Edit untuk mengisi pengeluaran yang sebenarnya, atau hapus jika memang tidak ada.',
+                      s.autoFillBanner,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme

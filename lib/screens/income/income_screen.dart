@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/income.dart';
 import '../../providers/income_providers.dart';
+import '../../providers/settings_provider.dart';
 import '../../routes/app_router.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
@@ -11,11 +13,27 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
 
+String _localizedTypeLabel(IncomeType type, AppStrings s) {
+  switch (type) {
+    case IncomeType.allowance:
+      return s.incomeTypeAllowance;
+    case IncomeType.fromPerson:
+      return s.incomeTypeFromPerson;
+    case IncomeType.project:
+      return s.incomeTypeProject;
+    case IncomeType.other:
+      return s.incomeTypeOther;
+  }
+}
+
 class IncomeScreen extends ConsumerWidget {
   const IncomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final theme = Theme.of(context);
     final now = DateTime.now();
     final monthTotal = ref.watch(currentMonthIncomeTotalProvider);
@@ -24,7 +42,7 @@ class IncomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Income'),
+        title: Text(s.incomeTitle),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.read(incomesProvider.notifier).reload(),
@@ -41,6 +59,7 @@ class IncomeScreen extends ConsumerWidget {
                       month: DateFormatter.formatMonthYear(now),
                       monthTotal: monthTotal,
                       balance: balance,
+                      s: s,
                     ),
                     const SizedBox(height: 16),
 
@@ -51,7 +70,7 @@ class IncomeScreen extends ConsumerWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'All Income',
+                        s.allIncome,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -76,10 +95,10 @@ class IncomeScreen extends ConsumerWidget {
               ),
               data: (list) {
                 if (list.isEmpty) {
-                  return const SliverFillRemaining(
+                  return SliverFillRemaining(
                     child: EmptyState(
-                      title: 'No income recorded yet',
-                      subtitle: 'Tap + to add your allowance or other income.',
+                      title: s.noIncomeYet,
+                      subtitle: s.tapToAddIncome,
                       icon: Icons.savings_outlined,
                     ),
                   );
@@ -93,6 +112,7 @@ class IncomeScreen extends ConsumerWidget {
                         children: [
                           _IncomeTile(
                             income: income,
+                            s: s,
                             onTap: () => context.push(
                               AppRoutes.editIncome,
                               extra: income,
@@ -122,11 +142,13 @@ class _IncomeMonthCard extends StatelessWidget {
   final String month;
   final AsyncValue<int> monthTotal;
   final AsyncValue<int> balance;
+  final AppStrings s;
 
   const _IncomeMonthCard({
     required this.month,
     required this.monthTotal,
     required this.balance,
+    required this.s,
   });
 
   @override
@@ -155,7 +177,7 @@ class _IncomeMonthCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Income',
+                        s.totalIncome,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: cs.onPrimaryContainer.withAlpha(160),
                         ),
@@ -186,7 +208,7 @@ class _IncomeMonthCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Net Balance',
+                        s.netBalance,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: cs.onPrimaryContainer.withAlpha(160),
                         ),
@@ -231,6 +253,9 @@ class _IncomeTypeBreakdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final breakdown = ref.watch(
       incomeBreakdownForMonthProvider(
         (year: month.year, month: month.month),
@@ -252,7 +277,7 @@ class _IncomeTypeBreakdown extends ConsumerWidget {
                 color: theme.colorScheme.primary,
               ),
               label: Text(
-                '${entry.key.label}: ${CurrencyFormatter.format(entry.value)}',
+                '${_localizedTypeLabel(entry.key, s)}: ${CurrencyFormatter.format(entry.value)}',
                 style: theme.textTheme.labelSmall,
               ),
               visualDensity: VisualDensity.compact,
@@ -283,9 +308,10 @@ class _IncomeTypeBreakdown extends ConsumerWidget {
 
 class _IncomeTile extends StatelessWidget {
   final Income income;
+  final AppStrings s;
   final VoidCallback? onTap;
 
-  const _IncomeTile({required this.income, this.onTap});
+  const _IncomeTile({required this.income, required this.s, this.onTap});
 
   IconData _iconForType(IncomeType type) {
     switch (type) {
@@ -317,6 +343,7 @@ class _IncomeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = _colorForType(income.type);
+    final typeLabel = _localizedTypeLabel(income.type, s);
 
     return ListTile(
       onTap: onTap,
@@ -330,7 +357,7 @@ class _IncomeTile extends StatelessWidget {
         child: Icon(_iconForType(income.type), color: color, size: 22),
       ),
       title: Text(
-        income.type.label +
+        typeLabel +
             (income.source != null && income.source!.isNotEmpty
                 ? ' – ${income.source}'
                 : ''),

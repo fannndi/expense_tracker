@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/income.dart';
 import '../../providers/income_providers.dart';
+import '../../providers/settings_provider.dart';
 import 'widgets/income_form.dart';
 
 class EditIncomeScreen extends ConsumerStatefulWidget {
@@ -17,6 +19,11 @@ class EditIncomeScreen extends ConsumerStatefulWidget {
 class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
   bool _loading = false;
 
+  AppStrings get _s {
+    final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+    return settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+  }
+
   Future<void> _onSave({
     required int amount,
     required IncomeType type,
@@ -24,6 +31,7 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
     String? source,
     String? note,
   }) async {
+    final s = _s;
     setState(() => _loading = true);
     try {
       final updated = widget.income.copyWith(
@@ -40,7 +48,7 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e')),
+          SnackBar(content: Text('${s.failedToUpdate}: $e')),
         );
       }
     } finally {
@@ -49,23 +57,23 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
   }
 
   Future<void> _onDelete() async {
+    final s = _s;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Income'),
-        content: const Text(
-            'Are you sure you want to delete this income entry?'),
+        title: Text(s.deleteIncome),
+        content: Text(s.deleteIncomeConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(s.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(s.delete),
           ),
         ],
       ),
@@ -79,7 +87,7 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e')),
+          SnackBar(content: Text('${s.failedToDelete}: $e')),
         );
       }
     } finally {
@@ -89,16 +97,19 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Income'),
+        title: Text(s.editIncome),
         actions: [
           IconButton(
             icon: Icon(
               Icons.delete_outline,
               color: Theme.of(context).colorScheme.error,
             ),
-            tooltip: 'Delete',
+            tooltip: s.delete,
             onPressed: _loading ? null : _onDelete,
           ),
         ],

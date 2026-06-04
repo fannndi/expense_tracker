@@ -1,132 +1,128 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_strings.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../utils/currency_formatter.dart';
 
-class BalanceCard extends StatelessWidget {
+/// Replaces the old BalanceCard. Shows a prominent hero section with the
+/// monthly spending total and income/balance pills.
+class HeroSection extends ConsumerWidget {
   final int income;
   final int expense;
   final int balance;
+  final String monthLabel;
 
-  const BalanceCard({
+  const HeroSection({
     super.key,
     required this.income,
     required this.expense,
     required this.balance,
+    required this.monthLabel,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isPositive = balance >= 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            monthLabel,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            CurrencyFormatter.format(expense),
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            s.totalSpending,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _StatPill(
+                icon: Icons.arrow_downward_rounded,
+                label: s.income,
+                value: CurrencyFormatter.format(income),
+                iconColor: cs.tertiary,
+              ),
+              const SizedBox(width: 24),
+              _StatPill(
+                icon: isPositive ? Icons.trending_up : Icons.trending_down,
+                label: s.balance,
+                value: '${isPositive ? '+' : '-'}${CurrencyFormatter.format(balance.abs())}',
+                iconColor: isPositive ? cs.tertiary : cs.error,
+                valueColor: isPositive ? cs.tertiary : cs.error,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? iconColor;
+  final Color? valueColor;
+
+  const _StatPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.iconColor,
+    this.valueColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final isPositive = balance >= 0;
-
-    return Card(
-      color: isPositive
-          ? Colors.green.shade50
-          : Colors.red.shade50,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isPositive
-              ? Colors.green.shade200
-              : Colors.red.shade200,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: iconColor ?? cs.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Income
-            Expanded(
-              child: _BalanceItem(
-                label: 'Income',
-                value: CurrencyFormatter.format(income),
-                icon: Icons.arrow_downward_rounded,
-                color: Colors.green.shade600,
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
               ),
             ),
-            Container(
-              width: 1,
-              height: 48,
-              color: cs.outlineVariant,
-            ),
-            // Expense
-            Expanded(
-              child: _BalanceItem(
-                label: 'Spending',
-                value: CurrencyFormatter.format(expense),
-                icon: Icons.arrow_upward_rounded,
-                color: Colors.red.shade600,
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 48,
-              color: cs.outlineVariant,
-            ),
-            // Balance
-            Expanded(
-              child: _BalanceItem(
-                label: 'Balance',
-                value: CurrencyFormatter.format(balance.abs()),
-                icon: isPositive
-                    ? Icons.trending_up
-                    : Icons.trending_down,
-                color: isPositive
-                    ? Colors.green.shade700
-                    : Colors.red.shade700,
-                prefixSign: isPositive ? '+' : '-',
+            Text(
+              value,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: valueColor ?? cs.onSurface,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _BalanceItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final String prefixSign;
-
-  const _BalanceItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-    this.prefixSign = '',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '$prefixSign$value',
-            style: theme.textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

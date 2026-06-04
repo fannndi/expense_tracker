@@ -7,8 +7,13 @@ import '../../../utils/currency_formatter.dart';
 
 class SpendingPieChart extends StatefulWidget {
   final List<CategorySummary> summaries;
+  final String title;
 
-  const SpendingPieChart({super.key, required this.summaries});
+  const SpendingPieChart({
+    super.key,
+    required this.summaries,
+    this.title = 'Spending Distribution',
+  });
 
   @override
   State<SpendingPieChart> createState() => _SpendingPieChartState();
@@ -27,7 +32,7 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Spending Distribution',
+              widget.title,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),

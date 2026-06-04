@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_strings.dart';
 import '../../../models/category_summary.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../utils/category_color.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
 import '../../../widgets/empty_state.dart';
 
-class CategoryAnalysisCard extends StatelessWidget {
+class CategoryAnalysisCard extends ConsumerWidget {
   final List<CategorySummary> summaries;
   final DateTime month;
 
@@ -17,14 +20,18 @@ class CategoryAnalysisCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     if (summaries.isEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: EmptyState(
-            title: 'No data for ${DateFormatter.formatMonthYear(month)}',
+            title: s.noDataFor(DateFormatter.formatMonthYear(month)),
             icon: Icons.bar_chart_outlined,
           ),
         ),
@@ -41,7 +48,7 @@ class CategoryAnalysisCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Category Analysis',
+              s.categoryAnalysis,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -53,21 +60,21 @@ class CategoryAnalysisCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _HighlightChip(
-                    label: 'Highest',
+                    label: s.highest,
                     category: highest.category,
                     amount: highest.total,
                     icon: Icons.trending_up,
-                    color: Colors.red.shade400,
+                    color: cs.error,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _HighlightChip(
-                    label: 'Lowest',
+                    label: s.lowest,
                     category: lowest.category,
                     amount: lowest.total,
                     icon: Icons.trending_down,
-                    color: Colors.green.shade400,
+                    color: cs.tertiary,
                   ),
                 ),
               ],
@@ -78,7 +85,7 @@ class CategoryAnalysisCard extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Detailed list
-            ...summaries.map((s) => _DetailRow(summary: s)),
+            ...summaries.map((sum) => _DetailRow(summary: sum)),
           ],
         ),
       ),

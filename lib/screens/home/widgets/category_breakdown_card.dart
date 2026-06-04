@@ -6,8 +6,13 @@ import '../../../utils/currency_formatter.dart';
 
 class CategoryBreakdownCard extends StatelessWidget {
   final List<CategorySummary> summaries;
+  final String title;
 
-  const CategoryBreakdownCard({super.key, required this.summaries});
+  const CategoryBreakdownCard({
+    super.key,
+    required this.summaries,
+    this.title = 'Monthly Breakdown',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class CategoryBreakdownCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Monthly Breakdown',
+              title,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),

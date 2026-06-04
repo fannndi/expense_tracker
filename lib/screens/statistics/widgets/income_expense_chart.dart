@@ -8,16 +8,21 @@ import '../../../utils/date_formatter.dart';
 class IncomeExpenseChart extends StatelessWidget {
   final List<MonthlySummary> expenseSummaries;
   final List<MonthlySummary> incomeSummaries;
+  final String incomeLabel;
+  final String spendingLabel;
 
   const IncomeExpenseChart({
     super.key,
     required this.expenseSummaries,
     required this.incomeSummaries,
+    this.incomeLabel = 'Income',
+    this.spendingLabel = 'Spending',
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     // Check if there's any income data worth showing
     final hasIncome = incomeSummaries.any((s) => s.total > 0);
@@ -37,7 +42,9 @@ class IncomeExpenseChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Income vs Spending',
+              incomeLabel.isNotEmpty && spendingLabel.isNotEmpty
+                  ? '$incomeLabel vs $spendingLabel'
+                  : 'Income vs Spending',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -45,10 +52,9 @@ class IncomeExpenseChart extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                _LegendDot(color: Colors.green.shade400, label: 'Income'),
+                _LegendDot(color: cs.tertiary, label: incomeLabel),
                 const SizedBox(width: 16),
-                _LegendDot(
-                    color: theme.colorScheme.primary, label: 'Spending'),
+                _LegendDot(color: cs.primary, label: spendingLabel),
               ],
             ),
             const SizedBox(height: 16),
@@ -61,7 +67,7 @@ class IncomeExpenseChart extends StatelessWidget {
                     show: true,
                     drawVerticalLine: false,
                     getDrawingHorizontalLine: (v) => FlLine(
-                      color: theme.colorScheme.outlineVariant.withAlpha(80),
+                      color: cs.outlineVariant.withAlpha(80),
                       strokeWidth: 1,
                     ),
                   ),
@@ -115,7 +121,7 @@ class IncomeExpenseChart extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           toY: income,
-                          color: Colors.green.shade400,
+                          color: cs.tertiary,
                           width: 10,
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(4),
@@ -123,7 +129,7 @@ class IncomeExpenseChart extends StatelessWidget {
                         ),
                         BarChartRodData(
                           toY: expense,
-                          color: theme.colorScheme.primary,
+                          color: cs.primary,
                           width: 10,
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(4),
@@ -135,11 +141,12 @@ class IncomeExpenseChart extends StatelessWidget {
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        final label = rodIndex == 0 ? 'Income' : 'Spending';
+                        final label =
+                            rodIndex == 0 ? incomeLabel : spendingLabel;
                         return BarTooltipItem(
                           '$label\n${CurrencyFormatter.format(rod.toY.toInt())}',
                           TextStyle(
-                            color: theme.colorScheme.onPrimary,
+                            color: cs.onPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),

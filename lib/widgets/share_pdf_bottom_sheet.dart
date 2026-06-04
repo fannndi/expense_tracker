@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_strings.dart';
 import '../models/category_summary.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
 import '../providers/expense_providers.dart';
 import '../providers/income_providers.dart';
+import '../providers/settings_provider.dart';
 import '../services/report_service.dart';
 
 class SharePdfBottomSheet {
@@ -28,12 +30,15 @@ class SharePdfBottomSheet {
   }
 }
 
-class _PeriodSelectorSheet extends StatelessWidget {
+class _PeriodSelectorSheet extends ConsumerWidget {
   final WidgetRef ref;
   const _PeriodSelectorSheet({required this.ref});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef widgetRef) {
+    final settings = widgetRef.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final now = DateTime.now();
 
     // ── Today ──────────────────────────────────────────────────────────────
@@ -41,14 +46,12 @@ class _PeriodSelectorSheet extends StatelessWidget {
     final todayEnd = todayStart;
 
     // ── This Week (Monday – Today) ─────────────────────────────────────────
-    // weekday: Mon=1 … Sun=7
     final daysFromMonday = now.weekday - DateTime.monday;
     final weekStart = DateTime(now.year, now.month, now.day - daysFromMonday);
     final weekEnd = todayStart;
 
     // ── This Month (1st – last day) ────────────────────────────────────────
     final monthStart = DateTime(now.year, now.month, 1);
-    // DateTime(y, m+1, 0) gives the last day of month m
     final monthEnd = DateTime(now.year, now.month + 1, 0);
 
     final monthFmt = DateFormat('MMMM', 'en_US');
@@ -74,7 +77,7 @@ class _PeriodSelectorSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              'Share PDF Report',
+              s.sharePdfReport,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
@@ -84,38 +87,36 @@ class _PeriodSelectorSheet extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.today),
-            title: const Text('Today'),
+            title: Text(s.today),
             onTap: () {
               Navigator.of(context).pop();
-              _generateAndSharePdf(context, ref, todayStart, todayEnd, 'Today');
+              _generateAndSharePdf(context, ref, todayStart, todayEnd, s.today, s);
             },
           ),
           ListTile(
             leading: const Icon(Icons.date_range),
-            title: const Text('This Week'),
-            subtitle: const Text('Monday – Today'),
+            title: Text(s.thisWeek),
+            subtitle: Text(s.mondayToToday),
             onTap: () {
               Navigator.of(context).pop();
-              _generateAndSharePdf(
-                  context, ref, weekStart, weekEnd, 'This Week');
+              _generateAndSharePdf(context, ref, weekStart, weekEnd, s.thisWeek, s);
             },
           ),
           ListTile(
             leading: const Icon(Icons.calendar_month),
-            title: const Text('This Month'),
+            title: Text(s.thisMonth),
             subtitle: Text('1 $monthName – $lastDay $monthName'),
             onTap: () {
               Navigator.of(context).pop();
-              _generateAndSharePdf(
-                  context, ref, monthStart, monthEnd, monthName);
+              _generateAndSharePdf(context, ref, monthStart, monthEnd, monthName, s);
             },
           ),
           ListTile(
             leading: const Icon(Icons.savings_outlined),
-            title: const Text('Allowance Period'),
+            title: Text(s.allowancePeriod),
             onTap: () {
               Navigator.of(context).pop();
-              _showAllowancePicker(context, ref);
+              _showAllowancePicker(context, ref, s);
             },
           ),
           const SizedBox(height: 8),
@@ -125,13 +126,13 @@ class _PeriodSelectorSheet extends StatelessWidget {
   }
 
   Future<void> _showAllowancePicker(
-      BuildContext context, WidgetRef ref) async {
+      BuildContext context, WidgetRef ref, AppStrings s) async {
     final periods = ref.read(allowancePeriodsProvider);
 
     if (periods.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No allowance records found')),
+          SnackBar(content: Text(s.noAllowanceRecords)),
         );
       }
       return;
@@ -161,7 +162,7 @@ class _PeriodSelectorSheet extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
-                  'Select Allowance Period',
+                  s.selectAllowancePeriod,
                   style: Theme.of(ctx)
                       .textTheme
                       .titleMedium
@@ -185,7 +186,7 @@ class _PeriodSelectorSheet extends StatelessWidget {
                       onTap: () {
                         Navigator.of(ctx).pop();
                         _generateAndSharePdf(
-                            context, ref, p.start, p.end, p.label);
+                            context, ref, p.start, p.end, p.label, s);
                       },
                     );
                   },
@@ -208,6 +209,7 @@ Future<void> _generateAndSharePdf(
   DateTime start,
   DateTime end,
   String label,
+  AppStrings s,
 ) async {
   if (!context.mounted) return;
 
@@ -215,12 +217,12 @@ Future<void> _generateAndSharePdf(
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const AlertDialog(
+    builder: (_) => AlertDialog(
       content: Row(
         children: [
-          CircularProgressIndicator(),
-          SizedBox(width: 16),
-          Text('Generating PDF...'),
+          const CircularProgressIndicator(),
+          const SizedBox(width: 16),
+          Text(s.generatingPdf),
         ],
       ),
     ),
@@ -280,7 +282,7 @@ Future<void> _generateAndSharePdf(
     if (context.mounted) {
       Navigator.of(context).pop(); // dismiss loading
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate PDF: $e')),
+        SnackBar(content: Text('${s.failedToGeneratePdf}: $e')),
       );
     }
   }

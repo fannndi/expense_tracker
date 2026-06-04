@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/expense.dart';
 import '../models/income.dart';
+import '../screens/settings/settings_screen.dart';
 import '../screens/shell/main_shell.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/history/history_screen.dart';
@@ -22,6 +23,7 @@ class AppRoutes {
   static const editExpense = '/edit-expense';
   static const addIncome = '/add-income';
   static const editIncome = '/edit-income';
+  static const settings = '/settings';
 }
 
 final appRouter = GoRouter(
@@ -77,6 +79,10 @@ final appRouter = GoRouter(
         final income = state.extra as Income;
         return EditIncomeScreen(income: income);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.settings,
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
 );

@@ -8,11 +8,15 @@ import 'category_icon.dart';
 class ExpenseListTile extends StatelessWidget {
   final Expense expense;
   final VoidCallback? onTap;
+  final String autoLabel;
+  final String autoFillLabel;
 
   const ExpenseListTile({
     super.key,
     required this.expense,
     this.onTap,
+    this.autoLabel = 'auto',
+    this.autoFillLabel = 'auto-fill',
   });
 
   @override
@@ -37,7 +41,7 @@ class ExpenseListTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'auto',
+                  autoLabel,
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 8,
                     color: theme.colorScheme.onTertiaryContainer,
@@ -64,7 +68,7 @@ class ExpenseListTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'auto-fill',
+                autoFillLabel,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 9,
                   color: theme.colorScheme.onTertiaryContainer,

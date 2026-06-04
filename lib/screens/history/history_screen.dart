@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_strings.dart';
 import '../../models/expense.dart';
 import '../../models/expense_filter.dart';
 import '../../providers/expense_providers.dart';
+import '../../providers/settings_provider.dart';
 import '../../routes/app_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_formatter.dart';
@@ -32,15 +34,16 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final filter = ref.watch(filterProvider);
     final expenses = ref.watch(filteredExpensesProvider);
-
-    // Available months from all expenses
     final allExpenses = ref.watch(expensesProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('History'),
+        title: Text(s.history),
         actions: [
           IconButton(
             icon: Icon(
@@ -49,7 +52,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ? Theme.of(context).colorScheme.primary
                   : null,
             ),
-            tooltip: 'Filters',
+            tooltip: s.clearFilters,
             onPressed: () => setState(() => _showFilters = !_showFilters),
           ),
         ],
@@ -57,7 +60,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       body: Column(
         children: [
           // Filter panel
-          if (_showFilters) _FilterPanel(filter: filter, allExpenses: allExpenses),
+          if (_showFilters)
+            _FilterPanel(filter: filter, allExpenses: allExpenses, strings: s),
 
           // Search bar
           Padding(
@@ -65,14 +69,17 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Search by note...',
+                hintText: s.searchByNote,
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: filter.searchNote != null && filter.searchNote!.isNotEmpty
+                suffixIcon: filter.searchNote != null &&
+                        filter.searchNote!.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchCtrl.clear();
-                          ref.read(filterProvider.notifier).setSearchNote(null);
+                          ref
+                              .read(filterProvider.notifier)
+                              .setSearchNote(null);
                         },
                       )
                     : null,
@@ -92,10 +99,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               data: (list) {
                 if (list.isEmpty) {
                   return EmptyState(
-                    title: 'No expenses found',
+                    title: s.noExpensesFound,
                     subtitle: filter.hasActiveFilter
-                        ? 'Try changing or clearing the filters.'
-                        : 'Add your first expense by tapping +',
+                        ? s.tryChangingFilters
+                        : s.addFirstExpense,
                     icon: Icons.receipt_long_outlined,
                   );
                 }
@@ -107,6 +114,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     final expense = list[index];
                     return ExpenseListTile(
                       expense: expense,
+                      autoLabel: s.auto,
+                      autoFillLabel: s.autoFill,
                       onTap: () => context.push(
                         AppRoutes.editExpense,
                         extra: expense,
@@ -118,7 +127,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               loading: () => const LoadingView(),
               error: (e, _) => ErrorView(
                 message: e.toString(),
-                onRetry: () => ref.read(expensesProvider.notifier).reload(),
+                onRetry: () =>
+                    ref.read(expensesProvider.notifier).reload(),
               ),
             ),
           ),
@@ -131,8 +141,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 class _FilterPanel extends ConsumerWidget {
   final ExpenseFilter filter;
   final AsyncValue<List<Expense>> allExpenses;
+  final AppStrings strings;
 
-  const _FilterPanel({required this.filter, required this.allExpenses});
+  const _FilterPanel({
+    required this.filter,
+    required this.allExpenses,
+    required this.strings,
+  });
 
   List<({int year, int month})> _availableMonths(List<Expense> list) {
     final seen = <String>{};
@@ -152,6 +167,7 @@ class _FilterPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final s = strings;
     final months = allExpenses.whenData(_availableMonths).valueOrNull ?? [];
     final theme = Theme.of(context);
 
@@ -166,17 +182,17 @@ class _FilterPanel extends ConsumerWidget {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: filter.category,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: s.category,
+                    border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                   ),
-                  hint: const Text('All'),
+                  hint: Text(s.all),
                   items: [
-                    const DropdownMenuItem<String>(
-                        value: null, child: Text('All')),
+                    DropdownMenuItem<String>(
+                        value: null, child: Text(s.all)),
                     ...AppConstants.categories.map(
                       (c) => DropdownMenuItem(value: c, child: Text(c)),
                     ),
@@ -191,16 +207,16 @@ class _FilterPanel extends ConsumerWidget {
                   initialValue: filter.year != null && filter.month != null
                       ? (year: filter.year!, month: filter.month!)
                       : null,
-                  decoration: const InputDecoration(
-                    labelText: 'Month',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: s.month,
+                    border: const OutlineInputBorder(),
                     isDense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                   ),
-                  hint: const Text('All'),
+                  hint: Text(s.all),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All')),
+                    DropdownMenuItem(value: null, child: Text(s.all)),
                     ...months.map(
                       (m) => DropdownMenuItem(
                         value: m,
@@ -228,9 +244,10 @@ class _FilterPanel extends ConsumerWidget {
           if (filter.hasActiveFilter) ...[
             const SizedBox(height: 8),
             TextButton.icon(
-              onPressed: () => ref.read(filterProvider.notifier).reset(),
+              onPressed: () =>
+                  ref.read(filterProvider.notifier).reset(),
               icon: const Icon(Icons.clear, size: 16),
-              label: const Text('Clear filters'),
+              label: Text(s.clearFilters),
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,

@@ -4,12 +4,14 @@ class SummaryCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final Color? iconColor;
 
   const SummaryCard({
     super.key,
     required this.label,
     required this.value,
     required this.icon,
+    this.iconColor,
   });
 
   @override
@@ -21,7 +23,11 @@ class SummaryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 22),
+            Icon(
+              icon,
+              color: iconColor ?? theme.colorScheme.primary,
+              size: 22,
+            ),
             const SizedBox(height: 8),
             Text(
               label,

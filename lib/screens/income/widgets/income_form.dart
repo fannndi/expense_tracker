@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_strings.dart';
 import '../../../models/income.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../utils/date_formatter.dart';
 
 typedef OnIncomeCallback = Future<void> Function({
@@ -12,7 +15,7 @@ typedef OnIncomeCallback = Future<void> Function({
   String? note,
 });
 
-class IncomeForm extends StatefulWidget {
+class IncomeForm extends ConsumerStatefulWidget {
   final Income? initialIncome;
   final OnIncomeCallback onSave;
   final bool loading;
@@ -25,10 +28,10 @@ class IncomeForm extends StatefulWidget {
   });
 
   @override
-  State<IncomeForm> createState() => _IncomeFormState();
+  ConsumerState<IncomeForm> createState() => _IncomeFormState();
 }
 
-class _IncomeFormState extends State<IncomeForm> {
+class _IncomeFormState extends ConsumerState<IncomeForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountCtrl;
   late final TextEditingController _sourceCtrl;
@@ -88,21 +91,11 @@ class _IncomeFormState extends State<IncomeForm> {
     );
   }
 
-  String _sourcePlaceholder(IncomeType type) {
-    switch (type) {
-      case IncomeType.allowance:
-        return 'e.g. Papa, Mama';
-      case IncomeType.fromPerson:
-        return 'e.g. Kakak, Om Budi';
-      case IncomeType.project:
-        return 'e.g. Website freelance PT ABC';
-      case IncomeType.other:
-        return 'e.g. Bonus, Hadiah';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final theme = Theme.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -114,12 +107,15 @@ class _IncomeFormState extends State<IncomeForm> {
             // Income type
             DropdownButtonFormField<IncomeType>(
               initialValue: _selectedType,
-              decoration: const InputDecoration(
-                labelText: 'Income Type',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s.incomeType,
+                border: const OutlineInputBorder(),
               ),
               items: IncomeType.values.map((t) {
-                return DropdownMenuItem(value: t, child: Text(t.label));
+                return DropdownMenuItem(
+                  value: t,
+                  child: Text(_localizedTypeLabel(t, s)),
+                );
               }).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _selectedType = v);
@@ -132,16 +128,17 @@ class _IncomeFormState extends State<IncomeForm> {
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: 'Amount (Rp)',
-                hintText: 'e.g. 500000',
+              decoration: InputDecoration(
+                labelText: s.amount,
+                hintText: s.amountHint,
                 prefixText: 'Rp ',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Amount is required';
+                if (v == null || v.trim().isEmpty) return s.amountRequired;
                 final n = int.tryParse(v.trim());
-                if (n == null || n <= 0) return 'Amount must be greater than 0';
+                if (n == null) return s.enterValidNumber;
+                if (n <= 0) return s.amountGreaterThanZero;
                 return null;
               },
             ),
@@ -151,8 +148,8 @@ class _IncomeFormState extends State<IncomeForm> {
             TextFormField(
               controller: _sourceCtrl,
               decoration: InputDecoration(
-                labelText: 'Source (optional)',
-                hintText: _sourcePlaceholder(_selectedType),
+                labelText: s.sourceOptional,
+                hintText: s.sourceOptional,
                 border: const OutlineInputBorder(),
               ),
               maxLength: 60,
@@ -164,10 +161,10 @@ class _IncomeFormState extends State<IncomeForm> {
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(4),
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Date',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today_outlined),
+                decoration: InputDecoration(
+                  labelText: s.date,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: const Icon(Icons.calendar_today_outlined),
                 ),
                 child: Text(
                   DateFormatter.formatDisplay(_selectedDate),
@@ -180,10 +177,9 @@ class _IncomeFormState extends State<IncomeForm> {
             // Note
             TextFormField(
               controller: _noteCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                hintText: 'e.g. Uang saku bulan Juni',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: s.noteOptional,
+                border: const OutlineInputBorder(),
               ),
               maxLength: 100,
             ),
@@ -197,16 +193,29 @@ class _IncomeFormState extends State<IncomeForm> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Save'),
+                  : Text(s.save),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: widget.loading ? null : () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(s.cancel),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+String _localizedTypeLabel(IncomeType type, AppStrings s) {
+  switch (type) {
+    case IncomeType.allowance:
+      return s.incomeTypeAllowance;
+    case IncomeType.fromPerson:
+      return s.incomeTypeFromPerson;
+    case IncomeType.project:
+      return s.incomeTypeProject;
+    case IncomeType.other:
+      return s.incomeTypeOther;
   }
 }

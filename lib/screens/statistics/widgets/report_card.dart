@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../l10n/app_strings.dart';
 import '../../../models/category_summary.dart';
 import '../../../models/expense.dart';
 import '../../../models/income.dart';
 import '../../../providers/expense_providers.dart';
 import '../../../providers/income_providers.dart';
+import '../../../providers/settings_provider.dart';
 import '../../../services/report_service.dart';
 import '../../../utils/date_formatter.dart';
 import '../../../widgets/share_pdf_bottom_sheet.dart';
@@ -18,6 +20,9 @@ class ReportCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+
     final theme = Theme.of(context);
     final expenses = ref.watch(expensesProvider);
     final incomes = ref.watch(incomesProvider);
@@ -41,7 +46,7 @@ class ReportCard extends ConsumerWidget {
                     color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'Monthly Report',
+                  s.monthlyReport,
                   style: theme.textTheme.titleSmall
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -49,7 +54,7 @@ class ReportCard extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Generate and share a report for ${DateFormatter.formatMonthYear(month)}',
+              s.generateReportFor(DateFormatter.formatMonthYear(month)),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -60,7 +65,7 @@ class ReportCard extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.share, size: 18),
-                    label: const Text('Share Text'),
+                    label: Text(s.shareText),
                     onPressed: !hasData
                         ? null
                         : () => _shareText(
@@ -75,7 +80,7 @@ class ReportCard extends ConsumerWidget {
                 Expanded(
                   child: FilledButton.icon(
                     icon: const Icon(Icons.picture_as_pdf, size: 18),
-                    label: const Text('Share PDF'),
+                    label: Text(s.sharePdf),
                     onPressed: !hasData
                         ? null
                         : () => SharePdfBottomSheet.show(context, ref),
@@ -122,5 +127,4 @@ class ReportCard extends ConsumerWidget {
       subject: 'Expense Report - ${DateFormatter.formatMonthYear(month)}',
     );
   }
-
 }
