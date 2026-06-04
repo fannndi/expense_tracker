@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/app_strings.dart';
 import '../models/expense.dart';
+import '../providers/settings_provider.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import 'category_icon.dart';
 
-class ExpenseListTile extends StatelessWidget {
+class ExpenseListTile extends ConsumerWidget {
   final Expense expense;
   final VoidCallback? onTap;
-  final String autoLabel;
-  final String autoFillLabel;
+  /// Override label untuk "auto" badge — kalau null ambil dari locale
+  final String? autoLabel;
+  final String? autoFillLabel;
 
   const ExpenseListTile({
     super.key,
     required this.expense,
     this.onTap,
-    this.autoLabel = 'auto',
-    this.autoFillLabel = 'auto-fill',
+    this.autoLabel,
+    this.autoFillLabel,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = AppStrings.forLocale(settings.locale);
+
     final isAutoFill = expense.isAutoFill;
+    final autoLbl = autoLabel ?? s.auto;
+    final autoFillLbl = autoFillLabel ?? s.autoFill;
+    final theme = Theme.of(context);
+
+    // Tampilkan nama kategori sesuai locale
+    final categoryDisplay = s.categoryDisplayName(expense.category);
 
     return ListTile(
       onTap: onTap,
@@ -35,13 +48,14 @@ class ExpenseListTile extends StatelessWidget {
               right: -4,
               top: -4,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.tertiaryContainer,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  autoLabel,
+                  autoLbl,
                   style: theme.textTheme.labelSmall?.copyWith(
                     fontSize: 8,
                     color: theme.colorScheme.onTertiaryContainer,
@@ -55,20 +69,21 @@ class ExpenseListTile extends StatelessWidget {
       title: Row(
         children: [
           Text(
-            expense.category,
+            categoryDisplay,
             style: theme.textTheme.titleSmall
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
           if (isAutoFill) ...[
             const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: theme.colorScheme.tertiaryContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                autoFillLabel,
+                autoFillLbl,
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 9,
                   color: theme.colorScheme.onTertiaryContainer,
@@ -94,7 +109,8 @@ class ExpenseListTile extends StatelessWidget {
                 color: isAutoFill
                     ? theme.colorScheme.onSurfaceVariant.withAlpha(150)
                     : theme.colorScheme.onSurfaceVariant,
-                fontStyle: isAutoFill ? FontStyle.italic : FontStyle.normal,
+                fontStyle:
+                    isAutoFill ? FontStyle.italic : FontStyle.normal,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

@@ -114,8 +114,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     final expense = list[index];
                     return ExpenseListTile(
                       expense: expense,
-                      autoLabel: s.auto,
-                      autoFillLabel: s.autoFill,
                       onTap: () => context.push(
                         AppRoutes.editExpense,
                         extra: expense,
@@ -194,7 +192,10 @@ class _FilterPanel extends ConsumerWidget {
                     DropdownMenuItem<String>(
                         value: null, child: Text(s.all)),
                     ...AppConstants.categories.map(
-                      (c) => DropdownMenuItem(value: c, child: Text(c)),
+                      (c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(s.categoryDisplayName(c)),
+                      ),
                     ),
                   ],
                   onChanged: (v) =>

@@ -112,6 +112,31 @@ abstract class AppStrings {
     if (locale?.languageCode == 'id') return id;
     return en;
   }
+
+  /// Translate stored English category key → localized display label
+  String categoryDisplayName(String key) {
+    switch (key) {
+      case 'Food':         return catFood;
+      case 'Fuel':         return catFuel;
+      case 'Internet':     return catInternet;
+      case 'Subscription': return catSubscription;
+      case 'Education':    return catEducation;
+      case 'Entertainment':return catEntertainment;
+      case 'Other':        return catOther;
+      default:             return key;
+    }
+  }
+
+  /// All category keys (always English, used for storage)
+  static const List<String> categoryKeys = [
+    'Food',
+    'Fuel',
+    'Internet',
+    'Subscription',
+    'Education',
+    'Entertainment',
+    'Other',
+  ];
   static const AppStrings en = _EnStrings();
   static const AppStrings id = _IdStrings();
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -14,7 +15,6 @@ void main() async {
   await initializeDateFormatting('id_ID', null);
   await initializeDateFormatting('en_US', null);
 
-  // Init notification service untuk auto-fill
   final notifService = AutoFillNotificationService();
   await notifService.init();
   await notifService.requestPermission();
@@ -42,7 +42,6 @@ class _StudentExpenseTrackerAppState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Cek auto-fill saat app pertama kali launch
     _runAutoFillCheck();
   }
 
@@ -54,7 +53,6 @@ class _StudentExpenseTrackerAppState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Cek lagi saat app resume dari background
     if (state == AppLifecycleState.resumed) {
       _runAutoFillCheck();
     }
@@ -66,15 +64,32 @@ class _StudentExpenseTrackerAppState
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    // Watch settings — rebuild MaterialApp setiap kali locale/theme berubah
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: settings.themeMode,
+
+      // ── Locale setup ──────────────────────────────────────────────────
+      // locale diset dari settings — trigger rebuild seluruh widget tree
       locale: settings.locale,
-      supportedLocales: const [Locale('en'), Locale('id')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('id'),
+      ],
+      // Delegates ini penting agar DatePicker, Material widgets, dll
+      // juga ikut ganti bahasa (nama bulan, hari, dll)
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       routerConfig: appRouter,
     );
   }

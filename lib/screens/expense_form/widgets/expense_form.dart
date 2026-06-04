@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_strings.dart';
 import '../../../models/expense.dart';
 import '../../../providers/settings_provider.dart';
-import '../../../utils/constants.dart';
+import '../../../utils/category_color.dart';
+import '../../../utils/currency_input_formatter.dart';
 import '../../../utils/date_formatter.dart';
+import '../../../widgets/category_icon.dart';
 
 typedef OnSaveCallback = Future<void> Function({
   required int amount,
@@ -19,7 +21,7 @@ class ExpenseForm extends ConsumerStatefulWidget {
   final Expense? initialExpense;
   final OnSaveCallback onSave;
   final bool loading;
-  /// If true, amount 0 is allowed (for editing auto-fill entries).
+  /// Kalau true, amount 0 diperbolehkan (edit auto-fill entry)
   final bool allowZeroAmount;
 
   const ExpenseForm({
@@ -45,11 +47,16 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   void initState() {
     super.initState();
     final e = widget.initialExpense;
+    // Format amount dengan titik saat init (jika ada nilai awal)
+    final initialAmount = e?.amount;
     _amountCtrl = TextEditingController(
-      text: e != null ? e.amount.toString() : '',
+      text: initialAmount != null && initialAmount > 0
+          ? ThousandSeparatorFormatter.addThousandSeparator(
+              initialAmount.toString())
+          : '',
     );
     _noteCtrl = TextEditingController(text: e?.note ?? '');
-    _selectedCategory = e?.category ?? AppConstants.categories.first;
+    _selectedCategory = e?.category ?? AppStrings.categoryKeys.first;
     _selectedDate = e?.date ?? DateTime.now();
   }
 
@@ -82,20 +89,27 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final amount =
+        ThousandSeparatorFormatter.parseFormatted(_amountCtrl.text.trim()) ?? 0;
     await widget.onSave(
-      amount: int.parse(_amountCtrl.text.trim()),
+      amount: amount,
       category: _selectedCategory,
       date: _selectedDate,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
     );
   }
 
+  AppStrings _strings() {
+    final settings =
+        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    return AppStrings.forLocale(settings.locale);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
-    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
-
+    final s = _strings();
     final theme = Theme.of(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Form(
@@ -103,20 +117,23 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Amount field
+            // ── Amount field dengan auto-titik ──────────────────────────
             TextFormField(
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                ThousandSeparatorFormatter(),
+              ],
               decoration: InputDecoration(
                 labelText: s.amount,
-                hintText: s.amountHint,
+                hintText: '15.000',
                 prefixText: 'Rp ',
                 border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return s.amountRequired;
-                final n = int.tryParse(v.trim());
+                final n = ThousandSeparatorFormatter.parseFormatted(v.trim());
                 if (n == null) return s.enterValidNumber;
                 if (!widget.allowZeroAmount && n <= 0) {
                   return s.amountGreaterThanZero;
@@ -127,15 +144,46 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
             ),
             const SizedBox(height: 16),
 
-            // Category dropdown
+            // ── Category dropdown dengan icon ───────────────────────────
             DropdownButtonFormField<String>(
               initialValue: _selectedCategory,
               decoration: InputDecoration(
                 labelText: s.categoryLabel,
                 border: const OutlineInputBorder(),
+                // Icon kategori yang sedang dipilih ditampilkan di prefix
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: CategoryIcon(
+                    category: _selectedCategory,
+                    size: 32,
+                  ),
+                ),
               ),
-              items: AppConstants.categories.map((cat) {
-                return DropdownMenuItem(value: cat, child: Text(cat));
+              isExpanded: true,
+              items: AppStrings.categoryKeys.map((key) {
+                final color = CategoryColor.forCategory(key);
+                return DropdownMenuItem<String>(
+                  value: key,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: color.withAlpha(35),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          CategoryIcon.iconFor(key),
+                          color: color,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(s.categoryDisplayName(key)),
+                    ],
+                  ),
+                );
               }).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _selectedCategory = v);
@@ -145,7 +193,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
             ),
             const SizedBox(height: 16),
 
-            // Date picker
+            // ── Date picker ─────────────────────────────────────────────
             InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(4),
@@ -163,7 +211,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
             ),
             const SizedBox(height: 16),
 
-            // Note field (optional)
+            // ── Note ────────────────────────────────────────────────────
             TextFormField(
               controller: _noteCtrl,
               decoration: InputDecoration(
@@ -175,7 +223,6 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
             ),
             const SizedBox(height: 24),
 
-            // Save button
             FilledButton(
               onPressed: widget.loading ? null : _submit,
               child: widget.loading
@@ -187,12 +234,9 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                   : Text(s.save),
             ),
             const SizedBox(height: 12),
-
-            // Cancel button
             OutlinedButton(
-              onPressed: widget.loading
-                  ? null
-                  : () => Navigator.of(context).pop(),
+              onPressed:
+                  widget.loading ? null : () => Navigator.of(context).pop(),
               child: Text(s.cancel),
             ),
           ],
