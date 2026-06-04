@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/category_summary.dart';
 import '../models/expense.dart';
+import '../models/income.dart';
 import '../utils/constants.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
@@ -15,15 +15,24 @@ class ReportData {
   final DateTime month;
   final List<Expense> expenses;
   final List<CategorySummary> breakdown;
+  final List<Income> incomes;
 
   const ReportData({
     required this.month,
     required this.expenses,
     required this.breakdown,
+    this.incomes = const [],
   });
 
-  int get totalSpending => expenses.fold(0, (sum, e) => sum + e.amount);
-  int get totalTransactions => expenses.length;
+  int get totalSpending =>
+      expenses.where((e) => !e.isAutoFill || e.amount > 0).fold(
+            0,
+            (sum, e) => sum + e.amount,
+          );
+  int get totalIncome => incomes.fold(0, (sum, i) => sum + i.amount);
+  int get netBalance => totalIncome - totalSpending;
+  int get totalTransactions =>
+      expenses.where((e) => !e.isAutoFill || e.amount > 0).length;
 }
 
 class ReportService {
@@ -35,7 +44,9 @@ class ReportService {
     buffer.writeln('Generated: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}');
     buffer.writeln();
     buffer.writeln('─────────────────────────────');
-    buffer.writeln('Total Spending: ${CurrencyFormatter.format(data.totalSpending)}');
+    buffer.writeln('Total Income   : ${CurrencyFormatter.format(data.totalIncome)}');
+    buffer.writeln('Total Spending : ${CurrencyFormatter.format(data.totalSpending)}');
+    buffer.writeln('Net Balance    : ${data.netBalance >= 0 ? '+' : ''}${CurrencyFormatter.format(data.netBalance)}');
     buffer.writeln('Total Transactions: ${data.totalTransactions}');
     buffer.writeln();
     buffer.writeln('BREAKDOWN BY CATEGORY:');
@@ -49,6 +60,8 @@ class ReportService {
     final sorted = List<Expense>.from(data.expenses)
       ..sort((a, b) => b.date.compareTo(a.date));
     for (final e in sorted) {
+      // Skip auto-fill entries with 0 amount dalam teks report
+      if (e.isAutoFill && e.amount == 0) continue;
       buffer.write('${DateFormatter.formatDisplay(e.date)} | ');
       buffer.write('${e.category} | ');
       buffer.write(CurrencyFormatter.format(e.amount));
@@ -76,6 +89,10 @@ class ReportService {
           pw.SizedBox(height: 16),
           _buildSummarySection(data),
           pw.SizedBox(height: 16),
+          if (data.incomes.isNotEmpty) ...[
+            _buildIncomeSection(data),
+            pw.SizedBox(height: 16),
+          ],
           _buildBreakdownSection(data),
           pw.SizedBox(height: 16),
           _buildTransactionsSection(data),
@@ -173,12 +190,57 @@ class ReportService {
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
           _summaryItem(
-              'Total Spending', CurrencyFormatter.format(data.totalSpending)),
-          _summaryItem('Transactions', '${data.totalTransactions}'),
+              'Total Income', CurrencyFormatter.format(data.totalIncome)),
           _summaryItem(
-              'Categories', '${data.breakdown.length}'),
+              'Total Spending', CurrencyFormatter.format(data.totalSpending)),
+          _summaryItem(
+              'Net Balance',
+              '${data.netBalance >= 0 ? '+' : ''}${CurrencyFormatter.format(data.netBalance)}'),
+          _summaryItem('Transactions', '${data.totalTransactions}'),
         ],
       ),
+    );
+  }
+
+  pw.Widget _buildIncomeSection(ReportData data) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'Income',
+          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 8),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(2.5),
+            1: const pw.FlexColumnWidth(2),
+            2: const pw.FlexColumnWidth(2.5),
+            3: const pw.FlexColumnWidth(3),
+          },
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: PdfColors.green50),
+              children: [
+                _tableHeader('Date'),
+                _tableHeader('Type'),
+                _tableHeader('Amount'),
+                _tableHeader('Source / Note'),
+              ],
+            ),
+            ...data.incomes.map(
+              (i) => pw.TableRow(children: [
+                _tableCell(DateFormatter.formatDisplay(i.date)),
+                _tableCell(i.type.label),
+                _tableCell(CurrencyFormatter.format(i.amount)),
+                _tableCell(
+                    [i.source, i.note].where((v) => v != null).join(' – ')),
+              ]),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

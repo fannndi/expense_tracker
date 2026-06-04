@@ -103,10 +103,45 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
           ),
         ],
       ),
-      body: ExpenseForm(
-        initialExpense: widget.expense,
-        onSave: _onSave,
-        loading: _loading,
+      body: Column(
+        children: [
+          // Banner khusus untuk auto-fill entry
+          if (widget.expense.isAutoFill)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: Theme.of(context).colorScheme.tertiaryContainer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onTertiaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Entry ini dibuat otomatis karena tidak ada pengeluaran pada hari tersebut. '
+                      'Edit untuk mengisi pengeluaran yang sebenarnya, atau hapus jika memang tidak ada.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: ExpenseForm(
+              initialExpense: widget.expense,
+              onSave: _onSave,
+              loading: _loading,
+              allowZeroAmount: widget.expense.isAutoFill,
+            ),
+          ),
+        ],
       ),
     );
   }

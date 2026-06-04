@@ -18,12 +18,61 @@ class ExpenseListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isAutoFill = expense.isAutoFill;
+
     return ListTile(
       onTap: onTap,
-      leading: CategoryIcon(category: expense.category),
-      title: Text(
-        expense.category,
-        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      leading: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CategoryIcon(category: expense.category),
+          if (isAutoFill)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'auto',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 8,
+                    color: theme.colorScheme.onTertiaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      title: Row(
+        children: [
+          Text(
+            expense.category,
+            style: theme.textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          if (isAutoFill) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'auto-fill',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: theme.colorScheme.onTertiaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,20 +87,26 @@ class ExpenseListTile extends StatelessWidget {
             Text(
               expense.note!,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                color: isAutoFill
+                    ? theme.colorScheme.onSurfaceVariant.withAlpha(150)
+                    : theme.colorScheme.onSurfaceVariant,
+                fontStyle: isAutoFill ? FontStyle.italic : FontStyle.normal,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
         ],
       ),
-      isThreeLine:
-          expense.note != null && expense.note!.isNotEmpty,
+      isThreeLine: expense.note != null && expense.note!.isNotEmpty,
       trailing: Text(
-        CurrencyFormatter.format(expense.amount),
+        expense.amount == 0 && isAutoFill
+            ? 'Rp 0'
+            : CurrencyFormatter.format(expense.amount),
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.bold,
-          color: theme.colorScheme.primary,
+          color: expense.amount == 0 && isAutoFill
+              ? theme.colorScheme.onSurfaceVariant
+              : theme.colorScheme.primary,
         ),
       ),
     );

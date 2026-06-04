@@ -7,7 +7,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../models/category_summary.dart';
 import '../../../models/expense.dart';
+import '../../../models/income.dart';
 import '../../../providers/expense_providers.dart';
+import '../../../providers/income_providers.dart';
 import '../../../services/report_service.dart';
 import '../../../utils/date_formatter.dart';
 
@@ -20,11 +22,14 @@ class ReportCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final expenses = ref.watch(expensesProvider);
+    final incomes = ref.watch(incomesProvider);
     final breakdown = ref.watch(
       categoryBreakdownForMonthProvider(
         (year: month.year, month: month.month),
       ),
     );
+
+    final hasData = expenses.valueOrNull != null;
 
     return Card(
       child: Padding(
@@ -58,11 +63,12 @@ class ReportCard extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.share, size: 18),
                     label: const Text('Share Text'),
-                    onPressed: expenses.valueOrNull == null
+                    onPressed: !hasData
                         ? null
                         : () => _shareText(
                               context,
                               expenses.valueOrNull!,
+                              incomes.valueOrNull ?? [],
                               breakdown.valueOrNull ?? [],
                             ),
                   ),
@@ -72,11 +78,12 @@ class ReportCard extends ConsumerWidget {
                   child: FilledButton.icon(
                     icon: const Icon(Icons.picture_as_pdf, size: 18),
                     label: const Text('Share PDF'),
-                    onPressed: expenses.valueOrNull == null
+                    onPressed: !hasData
                         ? null
                         : () => _sharePdf(
                               context,
                               expenses.valueOrNull!,
+                              incomes.valueOrNull ?? [],
                               breakdown.valueOrNull ?? [],
                             ),
                   ),
@@ -90,26 +97,33 @@ class ReportCard extends ConsumerWidget {
   }
 
   ReportData _buildReportData(
-      List<Expense> allExpenses, List<CategorySummary> breakdown) {
-    final filtered = allExpenses
+    List<Expense> allExpenses,
+    List<Income> allIncomes,
+    List<CategorySummary> breakdown,
+  ) {
+    final filteredExpenses = allExpenses
         .where((e) => e.date.year == month.year && e.date.month == month.month)
+        .toList();
+    final filteredIncomes = allIncomes
+        .where((i) => i.date.year == month.year && i.date.month == month.month)
         .toList();
     return ReportData(
       month: month,
-      expenses: filtered,
+      expenses: filteredExpenses,
       breakdown: breakdown,
+      incomes: filteredIncomes,
     );
   }
 
   Future<void> _shareText(
     BuildContext context,
     List<Expense> expenses,
+    List<Income> incomes,
     List<CategorySummary> breakdown,
   ) async {
-    final data = _buildReportData(expenses, breakdown);
+    final data = _buildReportData(expenses, incomes, breakdown);
     final service = ReportService();
     final text = service.generateTextReport(data);
-
     await Share.share(
       text,
       subject: 'Expense Report - ${DateFormatter.formatMonthYear(month)}',
@@ -119,6 +133,7 @@ class ReportCard extends ConsumerWidget {
   Future<void> _sharePdf(
     BuildContext context,
     List<Expense> expenses,
+    List<Income> incomes,
     List<CategorySummary> breakdown,
   ) async {
     if (!context.mounted) return;
@@ -138,7 +153,7 @@ class ReportCard extends ConsumerWidget {
     );
 
     try {
-      final data = _buildReportData(expenses, breakdown);
+      final data = _buildReportData(expenses, incomes, breakdown);
       final service = ReportService();
       final pdfBytes = await service.generatePdfReport(data);
 

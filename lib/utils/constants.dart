@@ -2,7 +2,9 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'Student Expense Tracker';
-  static const String expensesFileName = 'expenses.json';
+
+  /// Single JSON file untuk semua data (expenses + incomes)
+  static const String dataFileName = 'expenses.json';
 
   static const List<String> categories = [
     'Food',
@@ -28,4 +30,11 @@ class AppConstants {
     'November',
     'December',
   ];
+
+  /// Jam auto-fill: 23:00
+  static const int autoFillHour = 23;
+  static const int autoFillMinute = 0;
+
+  /// Kategori default untuk entry auto-fill
+  static const String autoFillCategory = 'Other';
 }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/expense_providers.dart';
+import '../../providers/income_providers.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
+import 'widgets/balance_card.dart';
 import 'widgets/category_breakdown_card.dart';
 import 'widgets/spending_pie_chart.dart';
 import 'widgets/summary_card.dart';
@@ -19,6 +21,8 @@ class HomeScreen extends ConsumerWidget {
     final monthLabel = DateFormatter.formatMonthYear(now);
     final monthTotal = ref.watch(currentMonthTotalProvider);
     final todayTotal = ref.watch(todayTotalProvider);
+    final incomeTotal = ref.watch(currentMonthIncomeTotalProvider);
+    final balance = ref.watch(currentMonthBalanceProvider);
     final breakdown = ref.watch(currentMonthCategoryBreakdownProvider);
 
     return Scaffold(
@@ -28,7 +32,10 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(expensesProvider.notifier).reload();
+          await Future.wait([
+            ref.read(expensesProvider.notifier).reload(),
+            ref.read(incomesProvider.notifier).reload(),
+          ]);
         },
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -43,6 +50,27 @@ class HomeScreen extends ConsumerWidget {
                     ),
               ),
             ),
+
+            // Balance card (income vs expense)
+            balance.when(
+              data: (bal) => incomeTotal.when(
+                data: (inc) => monthTotal.when(
+                  data: (exp) => BalanceCard(
+                    income: inc,
+                    expense: exp,
+                    balance: bal,
+                  ),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+
+            const SizedBox(height: 12),
 
             // Summary cards row
             Row(

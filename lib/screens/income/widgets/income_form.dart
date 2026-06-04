@@ -1,59 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../models/expense.dart';
-import '../../../utils/constants.dart';
+import '../../../models/income.dart';
 import '../../../utils/date_formatter.dart';
 
-typedef OnSaveCallback = Future<void> Function({
+typedef OnIncomeCallback = Future<void> Function({
   required int amount,
-  required String category,
+  required IncomeType type,
   required DateTime date,
+  String? source,
   String? note,
 });
 
-class ExpenseForm extends StatefulWidget {
-  final Expense? initialExpense;
-  final OnSaveCallback onSave;
+class IncomeForm extends StatefulWidget {
+  final Income? initialIncome;
+  final OnIncomeCallback onSave;
   final bool loading;
-  /// Kalau true, amount 0 diperbolehkan (untuk edit auto-fill entry)
-  final bool allowZeroAmount;
 
-  const ExpenseForm({
+  const IncomeForm({
     super.key,
-    this.initialExpense,
+    this.initialIncome,
     required this.onSave,
     this.loading = false,
-    this.allowZeroAmount = false,
   });
 
   @override
-  State<ExpenseForm> createState() => _ExpenseFormState();
+  State<IncomeForm> createState() => _IncomeFormState();
 }
 
-class _ExpenseFormState extends State<ExpenseForm> {
+class _IncomeFormState extends State<IncomeForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountCtrl;
+  late final TextEditingController _sourceCtrl;
   late final TextEditingController _noteCtrl;
-  late String _selectedCategory;
+  late IncomeType _selectedType;
   late DateTime _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    final e = widget.initialExpense;
+    final i = widget.initialIncome;
     _amountCtrl = TextEditingController(
-      text: e != null ? e.amount.toString() : '',
+      text: i != null ? i.amount.toString() : '',
     );
-    _noteCtrl = TextEditingController(text: e?.note ?? '');
-    _selectedCategory =
-        e?.category ?? AppConstants.categories.first;
-    _selectedDate = e?.date ?? DateTime.now();
+    _sourceCtrl = TextEditingController(text: i?.source ?? '');
+    _noteCtrl = TextEditingController(text: i?.note ?? '');
+    _selectedType = i?.type ?? IncomeType.allowance;
+    _selectedDate = i?.date ?? DateTime.now();
   }
 
   @override
   void dispose() {
     _amountCtrl.dispose();
+    _sourceCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -82,10 +81,24 @@ class _ExpenseFormState extends State<ExpenseForm> {
     if (!_formKey.currentState!.validate()) return;
     await widget.onSave(
       amount: int.parse(_amountCtrl.text.trim()),
-      category: _selectedCategory,
+      type: _selectedType,
       date: _selectedDate,
+      source: _sourceCtrl.text.trim().isEmpty ? null : _sourceCtrl.text.trim(),
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
     );
+  }
+
+  String _sourcePlaceholder(IncomeType type) {
+    switch (type) {
+      case IncomeType.allowance:
+        return 'e.g. Papa, Mama';
+      case IncomeType.fromPerson:
+        return 'e.g. Kakak, Om Budi';
+      case IncomeType.project:
+        return 'e.g. Website freelance PT ABC';
+      case IncomeType.other:
+        return 'e.g. Bonus, Hadiah';
+    }
   }
 
   @override
@@ -98,49 +111,55 @@ class _ExpenseFormState extends State<ExpenseForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Amount field
+            // Income type
+            DropdownButtonFormField<IncomeType>(
+              initialValue: _selectedType,
+              decoration: const InputDecoration(
+                labelText: 'Income Type',
+                border: OutlineInputBorder(),
+              ),
+              items: IncomeType.values.map((t) {
+                return DropdownMenuItem(value: t, child: Text(t.label));
+              }).toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _selectedType = v);
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Amount
             TextFormField(
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: const InputDecoration(
                 labelText: 'Amount (Rp)',
-                hintText: 'e.g. 15000',
+                hintText: 'e.g. 500000',
                 prefixText: 'Rp ',
                 border: OutlineInputBorder(),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Amount is required';
                 final n = int.tryParse(v.trim());
-                if (n == null) return 'Enter a valid number';
-                if (!widget.allowZeroAmount && n <= 0) {
-                  return 'Amount must be greater than 0';
-                }
-                if (n < 0) return 'Amount cannot be negative';
+                if (n == null || n <= 0) return 'Amount must be greater than 0';
                 return null;
               },
             ),
             const SizedBox(height: 16),
 
-            // Category dropdown
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
+            // Source
+            TextFormField(
+              controller: _sourceCtrl,
+              decoration: InputDecoration(
+                labelText: 'Source (optional)',
+                hintText: _sourcePlaceholder(_selectedType),
+                border: const OutlineInputBorder(),
               ),
-              items: AppConstants.categories.map((cat) {
-                return DropdownMenuItem(value: cat, child: Text(cat));
-              }).toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _selectedCategory = v);
-              },
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'Category is required' : null,
+              maxLength: 60,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-            // Date picker
+            // Date
             InkWell(
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(4),
@@ -158,19 +177,18 @@ class _ExpenseFormState extends State<ExpenseForm> {
             ),
             const SizedBox(height: 16),
 
-            // Note field (optional)
+            // Note
             TextFormField(
               controller: _noteCtrl,
               decoration: const InputDecoration(
                 labelText: 'Note (optional)',
-                hintText: 'e.g. Lunch with friends',
+                hintText: 'e.g. Uang saku bulan Juni',
                 border: OutlineInputBorder(),
               ),
               maxLength: 100,
             ),
             const SizedBox(height: 24),
 
-            // Save button
             FilledButton(
               onPressed: widget.loading ? null : _submit,
               child: widget.loading
@@ -182,12 +200,8 @@ class _ExpenseFormState extends State<ExpenseForm> {
                   : const Text('Save'),
             ),
             const SizedBox(height: 12),
-
-            // Cancel button
             OutlinedButton(
-              onPressed: widget.loading
-                  ? null
-                  : () => Navigator.of(context).pop(),
+              onPressed: widget.loading ? null : () => Navigator.of(context).pop(),
               child: const Text('Cancel'),
             ),
           ],

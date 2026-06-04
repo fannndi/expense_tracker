@@ -1,20 +1,27 @@
 import 'package:go_router/go_router.dart';
 
 import '../models/expense.dart';
+import '../models/income.dart';
 import '../screens/shell/main_shell.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/statistics/statistics_screen.dart';
+import '../screens/income/income_screen.dart';
 import '../screens/expense_form/add_expense_screen.dart';
 import '../screens/expense_form/edit_expense_screen.dart';
+import '../screens/income/add_income_screen.dart';
+import '../screens/income/edit_income_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
   static const home = '/';
   static const history = '/history';
   static const statistics = '/statistics';
+  static const income = '/income';
   static const addExpense = '/add-expense';
   static const editExpense = '/edit-expense';
+  static const addIncome = '/add-income';
+  static const editIncome = '/edit-income';
 }
 
 final appRouter = GoRouter(
@@ -41,6 +48,12 @@ final appRouter = GoRouter(
             child: StatisticsScreen(),
           ),
         ),
+        GoRoute(
+          path: AppRoutes.income,
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: IncomeScreen(),
+          ),
+        ),
       ],
     ),
     GoRoute(
@@ -52,6 +65,17 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final expense = state.extra as Expense;
         return EditExpenseScreen(expense: expense);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.addIncome,
+      builder: (context, state) => const AddIncomeScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.editIncome,
+      builder: (context, state) {
+        final income = state.extra as Income;
+        return EditIncomeScreen(income: income);
       },
     ),
   ],

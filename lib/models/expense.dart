@@ -6,6 +6,8 @@ class Expense {
   final String category;
   final int amount;
   final String? note;
+  /// True kalau entry ini dibuat otomatis oleh auto-fill service (jam 23:00)
+  final bool isAutoFill;
 
   const Expense({
     required this.id,
@@ -13,6 +15,7 @@ class Expense {
     required this.category,
     required this.amount,
     this.note,
+    this.isAutoFill = false,
   });
 
   Expense copyWith({
@@ -21,6 +24,7 @@ class Expense {
     String? category,
     int? amount,
     String? note,
+    bool? isAutoFill,
     bool clearNote = false,
   }) {
     return Expense(
@@ -29,6 +33,7 @@ class Expense {
       category: category ?? this.category,
       amount: amount ?? this.amount,
       note: clearNote ? null : (note ?? this.note),
+      isAutoFill: isAutoFill ?? this.isAutoFill,
     );
   }
 
@@ -39,6 +44,7 @@ class Expense {
       category: json['category'] as String,
       amount: json['amount'] as int,
       note: json['note'] as String?,
+      isAutoFill: json['isAutoFill'] as bool? ?? false,
     );
   }
 
@@ -49,6 +55,7 @@ class Expense {
       'category': category,
       'amount': amount,
       if (note != null && note!.isNotEmpty) 'note': note,
+      if (isAutoFill) 'isAutoFill': true,
     };
   }
 
@@ -64,5 +71,5 @@ class Expense {
 
   @override
   String toString() =>
-      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note)';
+      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note, isAutoFill: $isAutoFill)';
 }
