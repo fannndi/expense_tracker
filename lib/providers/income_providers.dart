@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/income.dart';
@@ -120,6 +121,73 @@ final monthlyIncomeTrendProvider =
     }
     return summaries;
   });
+});
+
+// ─── Allowance periods ────────────────────────────────────────────────────
+
+/// A single allowance period: from [start] (inclusive) to [end] (inclusive).
+class AllowancePeriod {
+  final DateTime start;
+  final DateTime end;
+  final String label;
+
+  const AllowancePeriod({
+    required this.start,
+    required this.end,
+    required this.label,
+  });
+
+  /// Short date range string, e.g. "15 Jan – 14 Feb"
+  String get rangeLabel {
+    final fmt = DateFormat('d MMM', 'en_US');
+    return '${fmt.format(start)} – ${fmt.format(end)}';
+  }
+}
+
+/// Derives allowance periods from [IncomeType.allowance] entries.
+/// Each period spans from one allowance date (inclusive) to the day before
+/// the next allowance (inclusive). The last period ends the day before today.
+/// Returned sorted newest-first. Empty list if no allowance entries exist.
+final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
+  final incomesAsync = ref.watch(incomesProvider);
+  final allIncomes = incomesAsync.valueOrNull ?? [];
+
+  final allowances = allIncomes
+      .where((i) => i.type == IncomeType.allowance)
+      .toList()
+    ..sort((a, b) => a.date.compareTo(b.date));
+
+  if (allowances.isEmpty) return [];
+
+  final today = DateTime.now();
+  final todayMidnight = DateTime(today.year, today.month, today.day);
+
+  final periods = <AllowancePeriod>[];
+  for (int i = 0; i < allowances.length; i++) {
+    final start = DateTime(
+      allowances[i].date.year,
+      allowances[i].date.month,
+      allowances[i].date.day,
+    );
+    final DateTime end;
+    if (i + 1 < allowances.length) {
+      final next = allowances[i + 1].date;
+      end = DateTime(next.year, next.month, next.day)
+          .subtract(const Duration(days: 1));
+    } else {
+      end = todayMidnight.subtract(const Duration(days: 1));
+    }
+    // Skip degenerate periods where end < start (e.g. two allowances same day)
+    if (end.isBefore(start)) continue;
+
+    final monthLabel = DateFormat('MMMM yyyy', 'en_US').format(start);
+    final label = 'Allowance – $monthLabel';
+    periods.add(AllowancePeriod(start: start, end: end, label: label));
+  }
+
+  // Newest-first
+  periods.sort((a, b) => b.start.compareTo(a.start));
+  return periods;
 });
 
 /// Income breakdown by type for a given month

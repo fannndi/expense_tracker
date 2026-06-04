@@ -16,12 +16,18 @@ class ReportData {
   final List<Expense> expenses;
   final List<CategorySummary> breakdown;
   final List<Income> incomes;
+  final String periodLabel;
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
 
   const ReportData({
     required this.month,
     required this.expenses,
     required this.breakdown,
     this.incomes = const [],
+    this.periodLabel = '',
+    this.periodStart,
+    this.periodEnd,
   });
 
   int get totalSpending =>
@@ -138,7 +144,9 @@ class ReportService {
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
               pw.Text(
-                DateFormatter.formatMonthYear(data.month),
+                data.periodLabel.isNotEmpty
+                    ? data.periodLabel
+                    : DateFormatter.formatMonthYear(data.month),
                 style: pw.TextStyle(
                   fontSize: 14,
                   fontWeight: pw.FontWeight.bold,

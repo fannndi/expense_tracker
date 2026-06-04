@@ -7,6 +7,7 @@ import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
+import '../../widgets/share_pdf_bottom_sheet.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/category_breakdown_card.dart';
 import 'widgets/spending_pie_chart.dart';
@@ -29,6 +30,13 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Student Expense Tracker'),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share_outlined),
+            tooltip: 'Share PDF',
+            onPressed: () => SharePdfBottomSheet.show(context, ref),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

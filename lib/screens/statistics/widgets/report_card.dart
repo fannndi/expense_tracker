@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../models/category_summary.dart';
@@ -12,6 +9,7 @@ import '../../../providers/expense_providers.dart';
 import '../../../providers/income_providers.dart';
 import '../../../services/report_service.dart';
 import '../../../utils/date_formatter.dart';
+import '../../../widgets/share_pdf_bottom_sheet.dart';
 
 class ReportCard extends ConsumerWidget {
   final DateTime month;
@@ -80,12 +78,7 @@ class ReportCard extends ConsumerWidget {
                     label: const Text('Share PDF'),
                     onPressed: !hasData
                         ? null
-                        : () => _sharePdf(
-                              context,
-                              expenses.valueOrNull!,
-                              incomes.valueOrNull ?? [],
-                              breakdown.valueOrNull ?? [],
-                            ),
+                        : () => SharePdfBottomSheet.show(context, ref),
                   ),
                 ),
               ],
@@ -130,53 +123,4 @@ class ReportCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _sharePdf(
-    BuildContext context,
-    List<Expense> expenses,
-    List<Income> incomes,
-    List<CategorySummary> breakdown,
-  ) async {
-    if (!context.mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Generating PDF...'),
-          ],
-        ),
-      ),
-    );
-
-    try {
-      final data = _buildReportData(expenses, incomes, breakdown);
-      final service = ReportService();
-      final pdfBytes = await service.generatePdfReport(data);
-
-      final dir = await getTemporaryDirectory();
-      final filename =
-          'expense_report_${month.year}_${month.month.toString().padLeft(2, '0')}.pdf';
-      final file = File('${dir.path}/$filename');
-      await file.writeAsBytes(pdfBytes);
-
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Expense Report - ${DateFormatter.formatMonthYear(month)}',
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e')),
-        );
-      }
-    }
-  }
 }
