@@ -1,8 +1,3 @@
-// ─── Settings provider ───────────────────────────────────────────────────────
-// This file is a stub created by this agent so that dependent files compile.
-// Agent A will replace this with the full implementation (persistence via
-// SharedPreferences, settings screen integration, etc.).
-
 import 'dart:convert';
 import 'dart:io';
 

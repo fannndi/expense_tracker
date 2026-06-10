@@ -290,18 +290,13 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
   static String _sourcePlaceholder(IncomeType type, AppStrings s) {
     switch (type) {
       case IncomeType.allowance:
-        return 'Papa, Mama';
+        return s.localeCode == 'id' ? 'Papa, Mama' : 'Dad, Mom';
       case IncomeType.fromPerson:
-        return s.locale == 'id' ? 'Kakak, Om Budi' : 'Brother, Uncle Budi';
+        return s.localeCode == 'id' ? 'Kakak, Om Budi' : 'Brother, Uncle Budi';
       case IncomeType.project:
-        return s.locale == 'id' ? 'Proyek website PT ABC' : 'Website project ABC';
+        return s.localeCode == 'id' ? 'Proyek website PT ABC' : 'Website project ABC Corp';
       case IncomeType.other:
-        return s.locale == 'id' ? 'Bonus, Hadiah' : 'Bonus, Gift';
+        return s.localeCode == 'id' ? 'Bonus, Hadiah' : 'Bonus, Gift';
     }
   }
-}
-
-extension on AppStrings {
-  // helper kecil buat cek locale tanpa import flutter
-  String get locale => this == AppStrings.id ? 'id' : 'en';
 }

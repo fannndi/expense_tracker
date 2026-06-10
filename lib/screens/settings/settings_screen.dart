@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../providers/settings_provider.dart';
+import '../../services/backup_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -49,6 +50,56 @@ class SettingsScreen extends ConsumerWidget {
             selected: settings.locale == const Locale('id'),
             onTap: () =>
                 ref.read(settingsProvider.notifier).setLocale(const Locale('id')),
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: s.exportData),
+          ListTile(
+            leading: Icon(Icons.upload_outlined, color: Theme.of(context).colorScheme.primary),
+            title: Text(s.exportData, style: Theme.of(context).textTheme.bodyLarge),
+            onTap: () async {
+              await BackupService().shareExport();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.dataExported)),
+                );
+              }
+            },
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          ),
+          ListTile(
+            leading: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.primary),
+            title: Text(s.importData, style: Theme.of(context).textTheme.bodyLarge),
+            onTap: () => _showImportDialog(context, ref, s),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: s.about),
+          const _AboutTile(),
+        ],
+      ),
+    );
+  }
+
+  void _showImportDialog(BuildContext context, WidgetRef ref, AppStrings s) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(s.importData),
+        content: Text(s.importDataConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(s.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              // Import would require file picker - placeholder for now
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(s.importData)),
+              );
+            },
+            child: Text(s.importData),
           ),
         ],
       ),
@@ -98,6 +149,43 @@ class _OptionTile extends StatelessWidget {
           : null,
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+    );
+  }
+}
+
+class _AboutTile extends StatelessWidget {
+  const _AboutTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Student Expense Tracker',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'v1.0.0+1',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'A personal expense tracker for university students.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -51,6 +51,7 @@ class StatisticsScreen extends ConsumerWidget {
                 incomeSummaries: incomeData,
                 incomeLabel: s.income,
                 spendingLabel: s.spending,
+                locale: settings.locale.languageCode,
               ),
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),

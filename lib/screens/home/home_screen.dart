@@ -19,6 +19,8 @@ import 'widgets/category_breakdown_card.dart';
 import 'widgets/spending_pie_chart.dart';
 import 'widgets/summary_card.dart';
 
+const double _kFabPadding = 100;
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -68,23 +70,11 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
 
             // Hero balance section (monthly)
-            balance.when(
-              data: (bal) => incomeTotal.when(
-                data: (inc) => monthTotal.when(
-                  data: (exp) => HeroSection(
-                    income: inc,
-                    expense: exp,
-                    balance: bal,
-                    monthLabel: monthLabel,
-                  ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+            _HeroSectionBuilder(
+              balance: balance,
+              incomeTotal: incomeTotal,
+              monthTotal: monthTotal,
+              monthLabel: monthLabel,
             ),
 
             const Divider(height: 1),
@@ -198,10 +188,45 @@ class HomeScreen extends ConsumerWidget {
             // Wallet summary section
             _WalletSummarySection(),
 
-            const SizedBox(height: 100),
+            const SizedBox(height: _kFabPadding),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _HeroSectionBuilder extends ConsumerWidget {
+  final AsyncValue<int> balance;
+  final AsyncValue<int> incomeTotal;
+  final AsyncValue<int> monthTotal;
+  final String monthLabel;
+
+  const _HeroSectionBuilder({
+    required this.balance,
+    required this.incomeTotal,
+    required this.monthTotal,
+    required this.monthLabel,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bal = balance.valueOrNull ?? 0;
+    final inc = incomeTotal.valueOrNull ?? 0;
+    final exp = monthTotal.valueOrNull ?? 0;
+
+    if (balance.isLoading || incomeTotal.isLoading || monthTotal.isLoading) {
+      return const SizedBox.shrink();
+    }
+    if (balance.hasError || incomeTotal.hasError || monthTotal.hasError) {
+      return const SizedBox.shrink();
+    }
+
+    return HeroSection(
+      income: inc,
+      expense: exp,
+      balance: bal,
+      monthLabel: monthLabel,
     );
   }
 }

@@ -128,6 +128,7 @@ class _AddWalletScreenState extends ConsumerState<AddWalletScreen> {
               _WalletTypeSelector(
                 selected: _selectedType,
                 onChanged: (type) => setState(() => _selectedType = type),
+                strings: s,
               ),
               const SizedBox(height: 32),
 
@@ -208,10 +209,12 @@ class _AddWalletScreenState extends ConsumerState<AddWalletScreen> {
 class _WalletTypeSelector extends StatelessWidget {
   final WalletType selected;
   final ValueChanged<WalletType> onChanged;
+  final AppStrings strings;
 
   const _WalletTypeSelector({
     required this.selected,
     required this.onChanged,
+    required this.strings,
   });
 
   @override
@@ -228,13 +231,13 @@ class _WalletTypeSelector extends StatelessWidget {
         String label;
         switch (type) {
           case WalletType.cash:
-            label = 'Cash / Tunai';
+            label = strings.walletTypeCash;
             break;
           case WalletType.eMoney:
-            label = 'E-Money';
+            label = strings.walletTypeEMoney;
             break;
           case WalletType.debitCredit:
-            label = 'Debit / Credit Card';
+            label = strings.walletTypeDebitCredit;
             break;
         }
 

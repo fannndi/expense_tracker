@@ -45,7 +45,8 @@ class ReportService {
   /// Generate plain text report
   String generateTextReport(ReportData data) {
     final buffer = StringBuffer();
-    buffer.writeln('=== ${AppConstants.appName} ===');    buffer.writeln('Expense Report');
+    buffer.writeln('=== ${AppConstants.appName} ===');
+    buffer.writeln('Expense Report');
     buffer.writeln('Month: ${DateFormatter.formatMonthYear(data.month)}');
     buffer.writeln('Generated: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}');
     buffer.writeln();

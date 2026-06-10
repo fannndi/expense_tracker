@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_strings.dart';
 import '../../../models/monthly_summary.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../utils/currency_abbreviator.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
 
@@ -16,6 +17,7 @@ class MonthlyTrendChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final locale = settings.locale.languageCode;
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
 
@@ -81,7 +83,7 @@ class MonthlyTrendChart extends ConsumerWidget {
                 getTitlesWidget: (value, meta) {
                   if (value == 0) return const SizedBox.shrink();
                   return Text(
-                    _formatShort(value.toInt()),
+                    CurrencyAbbreviator.abbreviate(value.toInt(), locale: locale),
                     style: theme.textTheme.labelSmall,
                   );
                 },
@@ -143,11 +145,5 @@ class MonthlyTrendChart extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _formatShort(int amount) {
-    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}jt';
-    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}rb';
-    return amount.toString();
   }
 }

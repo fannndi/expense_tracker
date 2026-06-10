@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_strings.dart';
+import '../../models/wallet.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/wallet_providers.dart';
 import '../../routes/app_router.dart';
@@ -121,35 +122,32 @@ class WalletScreen extends ConsumerWidget {
 
                 return Column(
                   children: [
-                    // Cash wallets
                     ..._buildSection(
                       context,
                       ref,
                       s,
-                      wallets.where((w) => w.type.name == 'cash').toList(),
-                      'Cash',
+                      wallets.where((w) => w.type == WalletType.cash).toList(),
+                      s.walletTypeCash,
                     ),
                     const SizedBox(height: 16),
 
-                    // E-Money wallets
                     ..._buildSection(
                       context,
                       ref,
                       s,
-                      wallets.where((w) => w.type.name == 'eMoney').toList(),
-                      'E-Money',
+                      wallets.where((w) => w.type == WalletType.eMoney).toList(),
+                      s.walletTypeEMoney,
                     ),
                     const SizedBox(height: 16),
 
-                    // Debit/Credit wallets
                     ..._buildSection(
                       context,
                       ref,
                       s,
                       wallets
-                          .where((w) => w.type.name == 'debitCredit')
+                          .where((w) => w.type == WalletType.debitCredit)
                           .toList(),
-                      'Debit/Credit',
+                      s.walletTypeDebitCredit,
                     ),
                   ],
                 );
@@ -179,7 +177,7 @@ class WalletScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AppStrings s,
-    List wallets,
+    List<Wallet> wallets,
     String title,
   ) {
     if (wallets.isEmpty) return [];

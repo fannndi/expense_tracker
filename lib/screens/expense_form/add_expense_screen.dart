@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_strings.dart';
-import '../../providers/expense_providers.dart';
 import '../../providers/settings_provider.dart';
-import '../../providers/wallet_providers.dart';
+import '../../services/wallet_transaction_service.dart';
 import 'widgets/expense_form.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
@@ -30,20 +29,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     setState(() => _loading = true);
     try {
-      // Add expense record
-      await ref.read(expensesProvider.notifier).addExpense(
-            amount: amount,
-            category: category,
+      await ref.read(walletTransactionServiceProvider).addExpenseWithWalletDebit(
             date: date,
+            category: category,
+            amount: amount,
             note: note,
             walletId: walletId,
             isTransfer: isTransfer,
           );
-
-      // Debit wallet balance
-      if (walletId != null && !isTransfer) {
-        await ref.read(walletsProvider.notifier).debitFromWallet(walletId, amount);
-      }
 
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

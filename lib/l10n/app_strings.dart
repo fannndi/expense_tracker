@@ -129,6 +129,16 @@ abstract class AppStrings {
   String get walletBalanceNotEmpty;
   String get sourceWallet;
   String get destinationWallet;
+  String get somethingWentWrong;
+  String get tryAgain;
+  String get about;
+  String get version;
+  String get exportData;
+  String get dataExported;
+  String get importData;
+  String get importDataConfirm;
+  String get dataImported;
+  String get importFailed;
   String generateReportFor(String monthLabel);
   String noDataFor(String monthLabel);
   static AppStrings forLocale(Locale? locale) {
@@ -293,6 +303,16 @@ class _EnStrings extends AppStrings {
   @override String get walletBalanceNotEmpty => 'Cannot delete wallet with balance';
   @override String get sourceWallet => 'From';
   @override String get destinationWallet => 'To';
+  @override String get somethingWentWrong => 'Something went wrong';
+  @override String get tryAgain => 'Try again';
+  @override String get about => 'About';
+  @override String get version => 'Version';
+  @override String get exportData => 'Export Data';
+  @override String get dataExported => 'Data exported successfully';
+  @override String get importData => 'Import Data';
+  @override String get importDataConfirm => 'This will replace all current data. Continue?';
+  @override String get dataImported => 'Data imported successfully';
+  @override String get importFailed => 'Import failed: invalid file';
   @override String generateReportFor(String m) => 'Generate and share a report for $m';
   @override String noDataFor(String m) => 'No data for $m';
 }
@@ -426,6 +446,20 @@ class _IdStrings extends AppStrings {
   @override String get walletBalanceNotEmpty => 'Tidak bisa hapus dompet dengan saldo';
   @override String get sourceWallet => 'Dari';
   @override String get destinationWallet => 'Ke';
+  @override String get somethingWentWrong => 'Terjadi kesalahan';
+  @override String get tryAgain => 'Coba lagi';
+  @override String get about => 'Tentang';
+  @override String get version => 'Versi';
+  @override String get exportData => 'Ekspor Data';
+  @override String get dataExported => 'Data berhasil diekspor';
+  @override String get importData => 'Impor Data';
+  @override String get importDataConfirm => 'Semua data saat ini akan diganti. Lanjutkan?';
+  @override String get dataImported => 'Data berhasil diimpor';
+  @override String get importFailed => 'Impor gagal: file tidak valid';
   @override String generateReportFor(String m) => 'Buat dan bagikan laporan untuk $m';
   @override String noDataFor(String m) => 'Tidak ada data untuk $m';
+}
+
+extension AppStringsExtension on AppStrings {
+  String get localeCode => this == AppStrings.id ? 'id' : 'en';
 }

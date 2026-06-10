@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/monthly_summary.dart';
+import '../../../utils/currency_abbreviator.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
 
@@ -10,6 +11,7 @@ class IncomeExpenseChart extends StatelessWidget {
   final List<MonthlySummary> incomeSummaries;
   final String incomeLabel;
   final String spendingLabel;
+  final String locale;
 
   const IncomeExpenseChart({
     super.key,
@@ -17,6 +19,7 @@ class IncomeExpenseChart extends StatelessWidget {
     required this.incomeSummaries,
     this.incomeLabel = 'Income',
     this.spendingLabel = 'Spending',
+    this.locale = 'en',
   });
 
   @override
@@ -98,7 +101,7 @@ class IncomeExpenseChart extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           if (value == 0) return const SizedBox.shrink();
                           return Text(
-                            _short(value.toInt()),
+                            CurrencyAbbreviator.abbreviate(value.toInt(), locale: locale),
                             style: theme.textTheme.labelSmall,
                           );
                         },
@@ -161,12 +164,6 @@ class IncomeExpenseChart extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _short(int amount) {
-    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}jt';
-    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}rb';
-    return amount.toString();
   }
 }
 

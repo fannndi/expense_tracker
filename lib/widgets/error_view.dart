@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ErrorView extends StatelessWidget {
+import '../l10n/app_strings.dart';
+import '../providers/settings_provider.dart';
+
+class ErrorView extends ConsumerWidget {
   final String message;
   final VoidCallback? onRetry;
 
@@ -11,7 +15,9 @@ class ErrorView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
     return Center(
       child: Padding(
@@ -26,7 +32,7 @@ class ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              s.somethingWentWrong,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -41,7 +47,7 @@ class ErrorView extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton.tonal(
                 onPressed: onRetry,
-                child: const Text('Try again'),
+                child: Text(s.tryAgain),
               ),
             ],
           ],

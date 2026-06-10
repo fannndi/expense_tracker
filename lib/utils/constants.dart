@@ -8,7 +8,9 @@ class AppConstants {
   static const String appName = 'Student Expense Tracker';
 
   /// Single JSON file untuk semua data (expenses + incomes + wallets)
-  static const String dataFileName = 'expenses.json';
+  static const String dataFileName = 'app_data.json';
+  static const String legacyDataFileName = 'expenses.json';
+  static const int dataVersion = 1;
 
   static const List<String> categories = [
     'Food',

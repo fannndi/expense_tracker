@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_strings.dart';
 import '../../../models/wallet.dart';
-import '../../../providers/expense_providers.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../providers/wallet_providers.dart';
+import '../../../services/wallet_transaction_service.dart';
 import '../../../utils/constants.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/currency_input_formatter.dart';
@@ -73,22 +73,11 @@ class _TopUpBottomSheetState extends ConsumerState<TopUpBottomSheet> {
 
     setState(() => _loading = true);
     try {
-      // 1. Transfer saldo antar wallet
-      await ref.read(walletsProvider.notifier).topUpWallet(
+      await ref.read(walletTransactionServiceProvider).topUpWithRecord(
             sourceId: _selectedSourceId!,
             destId: widget.destinationWallet.id,
             amount: amount,
-          );
-
-      // 2. Buat expense record (isTransfer = true)
-      await ref.read(expensesProvider.notifier).addExpense(
-            date: DateTime.now(),
-            category: 'Other',
-            amount: amount,
-            note:
-                'Top-up ${widget.destinationWallet.name}',
-            walletId: widget.destinationWallet.id,
-            isTransfer: true,
+            destName: widget.destinationWallet.name,
           );
 
       if (mounted) Navigator.of(context).pop();
