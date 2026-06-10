@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_strings.dart';
 import '../../../models/expense.dart';
+import '../../../models/wallet.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../providers/wallet_providers.dart';
 import '../../../utils/category_color.dart';
+import '../../../utils/constants.dart';
 import '../../../utils/currency_input_formatter.dart';
 import '../../../utils/date_formatter.dart';
 import '../../../widgets/category_icon.dart';
@@ -15,6 +18,8 @@ typedef OnSaveCallback = Future<void> Function({
   required String category,
   required DateTime date,
   String? note,
+  String? walletId,
+  bool isTransfer,
 });
 
 class ExpenseForm extends ConsumerStatefulWidget {
@@ -42,6 +47,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   late final TextEditingController _noteCtrl;
   late String _selectedCategory;
   late DateTime _selectedDate;
+  String? _selectedWalletId;
 
   @override
   void initState() {
@@ -58,6 +64,19 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     _noteCtrl = TextEditingController(text: e?.note ?? '');
     _selectedCategory = e?.category ?? AppStrings.categoryKeys.first;
     _selectedDate = e?.date ?? DateTime.now();
+    _selectedWalletId = e?.walletId;
+
+    // Default wallet: first cash wallet if none selected
+    if (_selectedWalletId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final wallets = ref.read(walletsProvider).valueOrNull ?? [];
+        final cashWallets =
+            wallets.where((w) => w.type == WalletType.cash).toList();
+        if (cashWallets.isNotEmpty && mounted) {
+          setState(() => _selectedWalletId = cashWallets.first.id);
+        }
+      });
+    }
   }
 
   @override
@@ -87,6 +106,64 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     }
   }
 
+  Widget _buildWalletPicker(AppStrings s) {
+    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedWalletId,
+      decoration: InputDecoration(
+        labelText: s.payFrom,
+        border: const OutlineInputBorder(),
+        prefixIcon: _selectedWalletId != null
+            ? _buildWalletIcon(
+                wallets.firstWhere(
+                  (w) => w.id == _selectedWalletId,
+                  orElse: () => wallets.first,
+                ),
+              )
+            : const Icon(Icons.account_balance_wallet_outlined),
+      ),
+      isExpanded: true,
+      items: wallets.map((w) {
+        final color = AppConstants.colorForWalletType(w.type);
+        return DropdownMenuItem<String>(
+          value: w.id,
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: color.withAlpha(35),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  AppConstants.iconForWalletType(w.type),
+                  color: color,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(w.name)),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (v) => setState(() => _selectedWalletId = v),
+    );
+  }
+
+  Widget _buildWalletIcon(Wallet wallet) {
+    final color = AppConstants.colorForWalletType(wallet.type);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Icon(
+        AppConstants.iconForWalletType(wallet.type),
+        color: color,
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final amount =
@@ -96,6 +173,8 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
       category: _selectedCategory,
       date: _selectedDate,
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+      walletId: _selectedWalletId,
+      isTransfer: false,
     );
   }
 
@@ -142,6 +221,10 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+
+            // ── Wallet picker (Pay from) ─────────────────────────────────
+            _buildWalletPicker(s),
             const SizedBox(height: 16),
 
             // ── Category dropdown dengan icon ───────────────────────────

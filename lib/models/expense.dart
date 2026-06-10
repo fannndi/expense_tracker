@@ -8,6 +8,10 @@ class Expense {
   final String? note;
   /// True kalau entry ini dibuat otomatis oleh auto-fill service (jam 23:00)
   final bool isAutoFill;
+  /// ID wallet yang dipakai untuk membayar expense ini
+  final String? walletId;
+  /// True kalau ini adalah top-up antar wallet (bukan pengeluaran riil)
+  final bool isTransfer;
 
   const Expense({
     required this.id,
@@ -16,6 +20,8 @@ class Expense {
     required this.amount,
     this.note,
     this.isAutoFill = false,
+    this.walletId,
+    this.isTransfer = false,
   });
 
   Expense copyWith({
@@ -25,7 +31,10 @@ class Expense {
     int? amount,
     String? note,
     bool? isAutoFill,
+    String? walletId,
+    bool? isTransfer,
     bool clearNote = false,
+    bool clearWalletId = false,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -34,6 +43,8 @@ class Expense {
       amount: amount ?? this.amount,
       note: clearNote ? null : (note ?? this.note),
       isAutoFill: isAutoFill ?? this.isAutoFill,
+      walletId: clearWalletId ? null : (walletId ?? this.walletId),
+      isTransfer: isTransfer ?? this.isTransfer,
     );
   }
 
@@ -45,6 +56,8 @@ class Expense {
       amount: json['amount'] as int,
       note: json['note'] as String?,
       isAutoFill: json['isAutoFill'] as bool? ?? false,
+      walletId: json['walletId'] as String?,
+      isTransfer: json['isTransfer'] as bool? ?? false,
     );
   }
 
@@ -56,6 +69,8 @@ class Expense {
       'amount': amount,
       if (note != null && note!.isNotEmpty) 'note': note,
       if (isAutoFill) 'isAutoFill': true,
+      if (walletId != null) 'walletId': walletId,
+      if (isTransfer) 'isTransfer': true,
     };
   }
 
@@ -71,5 +86,5 @@ class Expense {
 
   @override
   String toString() =>
-      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note, isAutoFill: $isAutoFill)';
+      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note, isAutoFill: $isAutoFill, walletId: $walletId, isTransfer: $isTransfer)';
 }

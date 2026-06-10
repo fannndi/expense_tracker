@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../providers/expense_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/wallet_providers.dart';
 import 'widgets/expense_form.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
@@ -21,18 +22,29 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     required String category,
     required DateTime date,
     String? note,
+    String? walletId,
+    bool isTransfer = false,
   }) async {
     final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     setState(() => _loading = true);
     try {
+      // Add expense record
       await ref.read(expensesProvider.notifier).addExpense(
             amount: amount,
             category: category,
             date: date,
             note: note,
+            walletId: walletId,
+            isTransfer: isTransfer,
           );
+
+      // Debit wallet balance
+      if (walletId != null && !isTransfer) {
+        await ref.read(walletsProvider.notifier).debitFromWallet(walletId, amount);
+      }
+
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {

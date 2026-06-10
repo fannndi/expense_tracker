@@ -6,7 +6,9 @@ import '../../l10n/app_strings.dart';
 import '../../providers/expense_providers.dart';
 import '../../providers/income_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/wallet_providers.dart';
 import '../../routes/app_router.dart';
+import '../../utils/constants.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/error_view.dart';
@@ -55,12 +57,17 @@ class HomeScreen extends ConsumerWidget {
           await Future.wait([
             ref.read(expensesProvider.notifier).reload(),
             ref.read(incomesProvider.notifier).reload(),
+            ref.read(walletsProvider.notifier).reload(),
           ]);
         },
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Hero balance section
+            // Total balance (all time)
+            const TotalBalanceSection(),
+            const SizedBox(height: 8),
+
+            // Hero balance section (monthly)
             balance.when(
               data: (bal) => incomeTotal.when(
                 data: (inc) => monthTotal.when(
@@ -186,9 +193,158 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
+            const SizedBox(height: 20),
+
+            // Wallet summary section
+            _WalletSummarySection(),
+
             const SizedBox(height: 100),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WalletSummarySection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final walletsAsync = ref.watch(walletsProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                s.wallets,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.push(AppRoutes.wallets),
+                child: Text(s.all),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          walletsAsync.when(
+            data: (wallets) {
+              if (wallets.isEmpty) {
+                return Card(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => context.push(AppRoutes.addWallet),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet_outlined,
+                              size: 32,
+                              color: cs.onSurfaceVariant.withAlpha(100),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              s.createFirstWallet,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: wallets.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final wallet = wallets[index];
+                    final color = AppConstants.colorForWalletType(wallet.type);
+                    final icon = AppConstants.iconForWalletType(wallet.type);
+
+                    return SizedBox(
+                      width: 160,
+                      child: Card(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => context.push(AppRoutes.wallets),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: color.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Icon(icon, color: color, size: 16),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        wallet.name,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+                                Text(
+                                  CurrencyFormatter.format(wallet.balance),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => const SizedBox(
+              height: 100,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(child: Text('Error: $e')),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

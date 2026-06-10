@@ -38,6 +38,8 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
     required String category,
     required int amount,
     String? note,
+    String? walletId,
+    bool isTransfer = false,
   }) async {
     final expense = Expense(
       id: 'exp_${const Uuid().v4()}',
@@ -45,6 +47,8 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
       category: category,
       amount: amount,
       note: note,
+      walletId: walletId,
+      isTransfer: isTransfer,
     );
     await ref.read(expenseRepositoryProvider).add(expense);
     await reload();
@@ -157,27 +161,28 @@ final todayExpensesProvider = Provider<AsyncValue<List<Expense>>>((ref) {
   });
 });
 
-/// Total spending for current month
+/// Total spending for current month (excluding transfers)
 final currentMonthTotalProvider = Provider<AsyncValue<int>>((ref) {
   return ref.watch(currentMonthExpensesProvider).whenData(
-        (list) => list.fold(0, (sum, e) => sum + e.amount),
+        (list) => list.where((e) => !e.isTransfer).fold(0, (sum, e) => sum + e.amount),
       );
 });
 
-/// Today's total spending
+/// Today's total spending (excluding transfers)
 final todayTotalProvider = Provider<AsyncValue<int>>((ref) {
   return ref.watch(todayExpensesProvider).whenData(
-        (list) => list.fold(0, (sum, e) => sum + e.amount),
+        (list) => list.where((e) => !e.isTransfer).fold(0, (sum, e) => sum + e.amount),
       );
 });
 
-/// Category breakdown for current month
+/// Category breakdown for current month (excluding transfers)
 final currentMonthCategoryBreakdownProvider =
     Provider<AsyncValue<List<CategorySummary>>>((ref) {
   return ref.watch(currentMonthExpensesProvider).whenData((list) {
-    if (list.isEmpty) return [];
+    final nonTransfers = list.where((e) => !e.isTransfer).toList();
+    if (nonTransfers.isEmpty) return [];
     final totals = <String, int>{};
-    for (final e in list) {
+    for (final e in nonTransfers) {
       totals[e.category] = (totals[e.category] ?? 0) + e.amount;
     }
     final grandTotal = totals.values.fold(0, (a, b) => a + b);
@@ -193,13 +198,16 @@ final currentMonthCategoryBreakdownProvider =
   });
 });
 
-/// Category breakdown for a given month (statistics screen)
+/// Category breakdown for a given month (statistics screen, excluding transfers)
 final categoryBreakdownForMonthProvider =
     Provider.family<AsyncValue<List<CategorySummary>>, ({int year, int month})>(
   (ref, params) {
     return ref.watch(expensesProvider).whenData((list) {
       final filtered = list.where(
-        (e) => e.date.year == params.year && e.date.month == params.month,
+        (e) =>
+            e.date.year == params.year &&
+            e.date.month == params.month &&
+            !e.isTransfer,
       );
       if (filtered.isEmpty) return [];
       final totals = <String, int>{};
@@ -220,7 +228,7 @@ final categoryBreakdownForMonthProvider =
   },
 );
 
-/// Monthly totals for trend chart (last 6 months)
+/// Monthly totals for trend chart (last 6 months, excluding transfers)
 final monthlyTrendProvider = Provider<AsyncValue<List<MonthlySummary>>>((ref) {
   return ref.watch(expensesProvider).whenData((list) {
     final now = DateTime.now();
@@ -228,7 +236,10 @@ final monthlyTrendProvider = Provider<AsyncValue<List<MonthlySummary>>>((ref) {
     for (int i = 5; i >= 0; i--) {
       final month = DateTime(now.year, now.month - i);
       final total = list
-          .where((e) => e.date.year == month.year && e.date.month == month.month)
+          .where((e) =>
+              e.date.year == month.year &&
+              e.date.month == month.month &&
+              !e.isTransfer)
           .fold(0, (sum, e) => sum + e.amount);
       summaries.add(MonthlySummary(
         year: month.year,

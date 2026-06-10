@@ -13,7 +13,8 @@ class MainShell extends ConsumerWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith(AppRoutes.income)) return 3;
+    if (location.startsWith(AppRoutes.income)) return 4;
+    if (location.startsWith(AppRoutes.wallets)) return 3;
     if (location.startsWith(AppRoutes.statistics)) return 2;
     if (location.startsWith(AppRoutes.history)) return 1;
     return 0;
@@ -52,6 +53,8 @@ class MainShell extends ConsumerWidget {
             case 2:
               context.go(AppRoutes.statistics);
             case 3:
+              context.go(AppRoutes.wallets);
+            case 4:
               context.go(AppRoutes.income);
           }
         },
@@ -70,6 +73,11 @@ class MainShell extends ConsumerWidget {
             icon: const Icon(Icons.bar_chart_outlined),
             selectedIcon: const Icon(Icons.bar_chart),
             label: s.navStatistics,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: const Icon(Icons.account_balance_wallet),
+            label: s.wallets,
           ),
           NavigationDestination(
             icon: const Icon(Icons.savings_outlined),

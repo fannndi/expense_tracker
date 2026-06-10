@@ -5,6 +5,7 @@ import '../../l10n/app_strings.dart';
 import '../../models/expense.dart';
 import '../../providers/expense_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/wallet_providers.dart';
 import 'widgets/expense_form.dart';
 
 class EditExpenseScreen extends ConsumerStatefulWidget {
@@ -29,18 +30,35 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     required String category,
     required DateTime date,
     String? note,
+    String? walletId,
+    bool isTransfer = false,
   }) async {
     final s = _s;
     setState(() => _loading = true);
     try {
+      // Reverse old wallet balance if applicable
+      final oldWalletId = widget.expense.walletId;
+      if (oldWalletId != null && !widget.expense.isTransfer) {
+        await ref.read(walletsProvider.notifier).refundToWallet(oldWalletId, widget.expense.amount);
+      }
+
       final updated = widget.expense.copyWith(
         amount: amount,
         category: category,
         date: date,
         note: note,
         clearNote: note == null || note.isEmpty,
+        walletId: walletId,
+        clearWalletId: walletId == null,
+        isTransfer: isTransfer,
       );
       await ref.read(expensesProvider.notifier).updateExpense(updated);
+
+      // Apply new wallet balance if applicable
+      if (walletId != null && !isTransfer) {
+        await ref.read(walletsProvider.notifier).debitFromWallet(walletId, amount);
+      }
+
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
@@ -80,6 +98,12 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
 
     setState(() => _loading = true);
     try {
+      // Refund wallet balance if applicable
+      final walletId = widget.expense.walletId;
+      if (walletId != null && !widget.expense.isTransfer) {
+        await ref.read(walletsProvider.notifier).refundToWallet(walletId, widget.expense.amount);
+      }
+
       await ref
           .read(expensesProvider.notifier)
           .deleteExpense(widget.expense.id);

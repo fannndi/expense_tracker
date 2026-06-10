@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_strings.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../providers/wallet_providers.dart';
 import '../../../utils/currency_formatter.dart';
 
 /// Replaces the old BalanceCard. Shows a prominent hero section with the
@@ -75,6 +76,81 @@ class HeroSection extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Widget untuk menampilkan total saldo keseluruhan
+class TotalBalanceSection extends ConsumerWidget {
+  const TotalBalanceSection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final totalBalance = ref.watch(grandTotalBalanceProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Card(
+        color: cs.primaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: cs.primary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet,
+                  color: cs.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.totalBalance,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onPrimaryContainer,
+                      ),
+                    ),
+                    totalBalance.when(
+                      data: (total) => Text(
+                        CurrencyFormatter.format(total),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: cs.onPrimaryContainer,
+                        ),
+                      ),
+                      loading: () => const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      error: (e, _) => Text(
+                        '-',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: cs.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

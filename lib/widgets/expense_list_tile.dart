@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_strings.dart';
 import '../models/expense.dart';
 import '../providers/settings_provider.dart';
+import '../providers/wallet_providers.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import 'category_icon.dart';
@@ -30,19 +31,43 @@ class ExpenseListTile extends ConsumerWidget {
     final s = AppStrings.forLocale(settings.locale);
 
     final isAutoFill = expense.isAutoFill;
+    final isTransfer = expense.isTransfer;
     final autoLbl = autoLabel ?? s.auto;
     final autoFillLbl = autoFillLabel ?? s.autoFill;
     final theme = Theme.of(context);
 
     // Tampilkan nama kategori sesuai locale
-    final categoryDisplay = s.categoryDisplayName(expense.category);
+    final categoryDisplay = isTransfer ? s.topUp : s.categoryDisplayName(expense.category);
+
+    // Get wallet name if walletId exists
+    String? walletName;
+    if (expense.walletId != null) {
+      final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+      final wallet = wallets.where((w) => w.id == expense.walletId).firstOrNull;
+      walletName = wallet?.name;
+    }
 
     return ListTile(
       onTap: onTap,
       leading: Stack(
         clipBehavior: Clip.none,
         children: [
-          CategoryIcon(category: expense.category),
+          if (isTransfer)
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Icon(
+                Icons.swap_horiz,
+                color: theme.colorScheme.tertiary,
+                size: 20,
+              ),
+            )
+          else
+            CategoryIcon(category: expense.category),
           if (isAutoFill)
             Positioned(
               right: -4,
@@ -87,6 +112,24 @@ class ExpenseListTile extends ConsumerWidget {
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontSize: 9,
                   color: theme.colorScheme.onTertiaryContainer,
+                ),
+              ),
+            ),
+          ],
+          if (walletName != null) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                walletName,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: theme.colorScheme.onSecondaryContainer,
                 ),
               ),
             ),
