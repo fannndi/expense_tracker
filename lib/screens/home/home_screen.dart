@@ -14,6 +14,7 @@ import '../../utils/date_formatter.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
 import '../../widgets/share_pdf_bottom_sheet.dart';
+import '../../widgets/today_reminders.dart';
 import 'widgets/balance_card.dart';
 import 'widgets/category_breakdown_card.dart';
 import 'widgets/spending_pie_chart.dart';
@@ -67,6 +68,10 @@ class HomeScreen extends ConsumerWidget {
           children: [
             // Total balance (all time)
             const TotalBalanceSection(),
+            const SizedBox(height: 8),
+
+            // Today's reminders (due or overdue)
+            const TodayRemindersSection(),
             const SizedBox(height: 8),
 
             // Hero balance section (monthly)

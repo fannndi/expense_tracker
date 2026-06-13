@@ -7,6 +7,7 @@ import 'providers/settings_provider.dart';
 import 'routes/app_router.dart';
 import 'services/auto_fill_service.dart';
 import 'services/auto_fill_checker.dart';
+import 'services/reminder_notification_service.dart';
 import 'utils/app_theme.dart';
 import 'utils/constants.dart';
 
@@ -19,6 +20,10 @@ void main() async {
   await notifService.init();
   await notifService.requestPermission();
   await notifService.scheduleDailyReminder();
+
+  final reminderNotif = ReminderNotificationService();
+  await reminderNotif.init();
+  await reminderNotif.requestPermission();
 
   runApp(
     const ProviderScope(

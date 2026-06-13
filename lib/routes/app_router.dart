@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../models/expense.dart';
 import '../models/income.dart';
+import '../models/reminder.dart';
 import '../models/wallet.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/shell/main_shell.dart';
@@ -15,6 +16,8 @@ import '../screens/expense_form/add_expense_screen.dart';
 import '../screens/expense_form/edit_expense_screen.dart';
 import '../screens/income/add_income_screen.dart';
 import '../screens/income/edit_income_screen.dart';
+import '../screens/reminders/reminder_list_screen.dart';
+import '../screens/reminders/add_reminder_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -30,6 +33,8 @@ class AppRoutes {
   static const settings = '/settings';
   static const addWallet = '/add-wallet';
   static const editWallet = '/edit-wallet';
+  static const reminders = '/reminders';
+  static const addReminder = '/add-reminder';
 }
 
 final appRouter = GoRouter(
@@ -106,6 +111,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.settings,
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.reminders,
+      builder: (context, state) => const ReminderListScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.addReminder,
+      builder: (context, state) {
+        return AddReminderScreen(
+          initialReminder: state.extra != null ? state.extra as Reminder? : null,
+        );
+      },
     ),
   ],
 );

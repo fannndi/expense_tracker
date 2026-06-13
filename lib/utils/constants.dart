@@ -10,7 +10,7 @@ class AppConstants {
   /// Single JSON file untuk semua data (expenses + incomes + wallets)
   static const String dataFileName = 'app_data.json';
   static const String legacyDataFileName = 'expenses.json';
-  static const int dataVersion = 1;
+  static const int dataVersion = 2;
 
   static const List<String> categories = [
     'Food',

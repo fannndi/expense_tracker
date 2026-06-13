@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../models/expense.dart';
+import '../../models/reminder.dart';
 import '../../providers/settings_provider.dart';
 import '../../services/wallet_transaction_service.dart';
 import 'widgets/expense_form.dart';
@@ -31,6 +32,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
     String? note,
     String? walletId,
     bool isTransfer = false,
+    ReminderData? reminderData,
   }) async {
     final s = _s;
     setState(() => _loading = true);
@@ -146,6 +148,32 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onTertiaryContainer,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (widget.expense.reminderId != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.notifications_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Pengeluaran ini dicatat dari pengingat. Edit pengingat di menu Pengingat.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSecondaryContainer,
                           ),
                     ),
                   ),

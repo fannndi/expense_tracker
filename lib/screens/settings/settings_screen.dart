@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../providers/settings_provider.dart';
+import '../../routes/app_router.dart';
 import '../../services/backup_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -70,6 +72,15 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.primary),
             title: Text(s.importData, style: Theme.of(context).textTheme.bodyLarge),
             onTap: () => _showImportDialog(context, ref, s),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: s.reminders),
+          ListTile(
+            leading: Icon(Icons.notifications_outlined, color: Theme.of(context).colorScheme.primary),
+            title: Text(s.reminders, style: Theme.of(context).textTheme.bodyLarge),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.reminders),
             contentPadding: const EdgeInsets.symmetric(horizontal: 20),
           ),
           const Divider(height: 1),

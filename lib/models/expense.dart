@@ -12,6 +12,8 @@ class Expense {
   final String? walletId;
   /// True kalau ini adalah top-up antar wallet (bukan pengeluaran riil)
   final bool isTransfer;
+  /// ID reminder yang melahirkan expense ini (null = manual entry)
+  final String? reminderId;
 
   const Expense({
     required this.id,
@@ -22,6 +24,7 @@ class Expense {
     this.isAutoFill = false,
     this.walletId,
     this.isTransfer = false,
+    this.reminderId,
   });
 
   Expense copyWith({
@@ -33,8 +36,10 @@ class Expense {
     bool? isAutoFill,
     String? walletId,
     bool? isTransfer,
+    String? reminderId,
     bool clearNote = false,
     bool clearWalletId = false,
+    bool clearReminderId = false,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -45,6 +50,7 @@ class Expense {
       isAutoFill: isAutoFill ?? this.isAutoFill,
       walletId: clearWalletId ? null : (walletId ?? this.walletId),
       isTransfer: isTransfer ?? this.isTransfer,
+      reminderId: clearReminderId ? null : (reminderId ?? this.reminderId),
     );
   }
 
@@ -58,6 +64,7 @@ class Expense {
       isAutoFill: json['isAutoFill'] as bool? ?? false,
       walletId: json['walletId'] as String?,
       isTransfer: json['isTransfer'] as bool? ?? false,
+      reminderId: json['reminderId'] as String?,
     );
   }
 
@@ -71,6 +78,7 @@ class Expense {
       if (isAutoFill) 'isAutoFill': true,
       if (walletId != null) 'walletId': walletId,
       if (isTransfer) 'isTransfer': true,
+      if (reminderId != null) 'reminderId': reminderId,
     };
   }
 
@@ -86,5 +94,5 @@ class Expense {
 
   @override
   String toString() =>
-      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note, isAutoFill: $isAutoFill, walletId: $walletId, isTransfer: $isTransfer)';
+      'Expense(id: $id, date: $date, category: $category, amount: $amount, note: $note, isAutoFill: $isAutoFill, walletId: $walletId, isTransfer: $isTransfer, reminderId: $reminderId)';
 }

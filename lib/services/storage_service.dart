@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/expense.dart';
 import '../models/income.dart';
+import '../models/reminder.dart';
 import '../models/wallet.dart';
 import '../utils/constants.dart';
 
@@ -173,6 +174,40 @@ class StorageService {
         await _writeDataAtomic(data);
       } on IOException catch (e) {
         throw StorageException('Failed to save wallet data.', cause: e);
+      }
+    });
+  }
+
+  // ─── Reminders ─────────────────────────────────────────────────────────
+
+  Future<List<Reminder>> loadReminders() async {
+    return _synchronized(() async {
+      await _ensureMigrated();
+      try {
+        final data = await _readData();
+        final List<dynamic> rawList =
+            data['reminders'] as List<dynamic>? ?? [];
+        return rawList
+            .map((e) => Reminder.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } on FormatException catch (e) {
+        throw StorageException('Data file is corrupted.', cause: e);
+      } on IOException catch (e) {
+        throw StorageException('Failed to read reminder data.', cause: e);
+      }
+    });
+  }
+
+  Future<void> saveReminders(List<Reminder> reminders) async {
+    return _synchronized(() async {
+      await _ensureMigrated();
+      try {
+        final data = await _readData();
+        data['reminders'] = reminders.map((e) => e.toJson()).toList();
+        data['version'] = AppConstants.dataVersion;
+        await _writeDataAtomic(data);
+      } on IOException catch (e) {
+        throw StorageException('Failed to save reminder data.', cause: e);
       }
     });
   }

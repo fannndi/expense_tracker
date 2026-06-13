@@ -40,6 +40,7 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
     String? note,
     String? walletId,
     bool isTransfer = false,
+    String? reminderId,
   }) async {
     final expense = Expense(
       id: 'exp_${const Uuid().v4()}',
@@ -49,6 +50,7 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
       note: note,
       walletId: walletId,
       isTransfer: isTransfer,
+      reminderId: reminderId,
     );
     await ref.read(expenseRepositoryProvider).add(expense);
     await reload();

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_strings.dart';
 import '../../../models/expense.dart';
+import '../../../models/reminder.dart';
 import '../../../models/wallet.dart';
 import '../../../providers/settings_provider.dart';
 import '../../../providers/wallet_providers.dart';
@@ -20,6 +21,7 @@ typedef OnSaveCallback = Future<void> Function({
   String? note,
   String? walletId,
   bool isTransfer,
+  ReminderData? reminderData,
 });
 
 class ExpenseForm extends ConsumerStatefulWidget {
@@ -45,9 +47,13 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountCtrl;
   late final TextEditingController _noteCtrl;
+  late final TextEditingController _customDaysCtrl;
   late String _selectedCategory;
   late DateTime _selectedDate;
   String? _selectedWalletId;
+  bool _enableReminder = false;
+  ReminderRecurrence _reminderRecurrence = ReminderRecurrence.monthlyByDate;
+  int _reminderDayOfMonth = 27;
 
   @override
   void initState() {
@@ -62,6 +68,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
           : '',
     );
     _noteCtrl = TextEditingController(text: e?.note ?? '');
+    _customDaysCtrl = TextEditingController();
     _selectedCategory = e?.category ?? AppStrings.categoryKeys.first;
     _selectedDate = e?.date ?? DateTime.now();
     _selectedWalletId = e?.walletId;
@@ -83,6 +90,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   void dispose() {
     _amountCtrl.dispose();
     _noteCtrl.dispose();
+    _customDaysCtrl.dispose();
     super.dispose();
   }
 
@@ -175,6 +183,17 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
       walletId: _selectedWalletId,
       isTransfer: false,
+      reminderData: _enableReminder
+          ? ReminderData(
+              recurrence: _reminderRecurrence,
+              dayOfMonth: _reminderRecurrence == ReminderRecurrence.monthlyByDate
+                  ? _reminderDayOfMonth
+                  : null,
+              customIntervalDays: _reminderRecurrence == ReminderRecurrence.customDays
+                  ? int.tryParse(_customDaysCtrl.text)
+                  : null,
+            )
+          : null,
     );
   }
 
@@ -304,7 +323,131 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
               ),
               maxLength: 100,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // ── Reminder section ─────────────────────────────────────────
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.notifications_outlined,
+                            size: 18, color: theme.colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          s.setReminder,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const Spacer(),
+                        Switch(
+                          value: _enableReminder,
+                          onChanged: (v) =>
+                              setState(() => _enableReminder = v),
+                        ),
+                      ],
+                    ),
+                    if (_enableReminder) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<ReminderRecurrence>(
+                        initialValue: _reminderRecurrence,
+                        decoration: InputDecoration(
+                          labelText: s.reminderRecurrence,
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: ReminderRecurrence.daily,
+                            child: Text(s.daily),
+                          ),
+                          DropdownMenuItem(
+                            value: ReminderRecurrence.weekly,
+                            child: Text(s.weekly),
+                          ),
+                          DropdownMenuItem(
+                            value: ReminderRecurrence.monthlyByDate,
+                            child: Text(s.monthly),
+                          ),
+                          DropdownMenuItem(
+                            value: ReminderRecurrence.customDays,
+                            child: Text(s.customDays),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() => _reminderRecurrence = v);
+                          }
+                        },
+                      ),
+                      if (_reminderRecurrence ==
+                          ReminderRecurrence.monthlyByDate) ...[
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<int>(
+                          initialValue: _reminderDayOfMonth,
+                          decoration: InputDecoration(
+                            labelText: s.dayOfMonth,
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: List.generate(31, (i) {
+                            final day = i + 1;
+                            return DropdownMenuItem(
+                              value: day,
+                              child: Text('$day'),
+                            );
+                          }),
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(() => _reminderDayOfMonth = v);
+                            }
+                          },
+                        ),
+                      ],
+                      if (_reminderRecurrence ==
+                          ReminderRecurrence.customDays) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _customDaysCtrl,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: InputDecoration(
+                            labelText: s.everyNDays,
+                            hintText: '28',
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          validator: (v) {
+                            if (!_enableReminder) {
+                              return null;
+                            }
+                            if (_reminderRecurrence !=
+                                ReminderRecurrence.customDays) {
+                              return null;
+                            }
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Required';
+                            }
+                            final n = int.tryParse(v);
+                            if (n == null || n < 1) {
+                              return 'Min 1';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             FilledButton(
               onPressed: widget.loading ? null : _submit,

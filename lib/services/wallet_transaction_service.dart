@@ -16,6 +16,7 @@ class WalletTransactionService {
     String? note,
     String? walletId,
     bool isTransfer = false,
+    String? reminderId,
   }) async {
     await _ref.read(expensesProvider.notifier).addExpense(
           date: date,
@@ -24,6 +25,7 @@ class WalletTransactionService {
           note: note,
           walletId: walletId,
           isTransfer: isTransfer,
+          reminderId: reminderId,
         );
 
     if (walletId != null && !isTransfer) {
