@@ -6,7 +6,9 @@ import '../../l10n/app_strings.dart';
 import '../../models/income.dart';
 import '../../providers/income_providers.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/wallet_providers.dart';
 import '../../routes/app_router.dart';
+import '../../utils/constants.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import '../../widgets/empty_state.dart';
@@ -306,7 +308,7 @@ class _IncomeTypeBreakdown extends ConsumerWidget {
 
 // ─── Income tile ───────────────────────────────────────────────────────────
 
-class _IncomeTile extends StatelessWidget {
+class _IncomeTile extends ConsumerWidget {
   final Income income;
   final AppStrings s;
   final VoidCallback? onTap;
@@ -340,10 +342,16 @@ class _IncomeTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final color = _colorForType(income.type);
     final typeLabel = _localizedTypeLabel(income.type, s);
+
+    // Find wallet info
+    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+    final wallet = income.walletId != null
+        ? wallets.where((w) => w.id == income.walletId).firstOrNull
+        : null;
 
     return ListTile(
       onTap: onTap,
@@ -381,9 +389,28 @@ class _IncomeTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+          if (wallet != null) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Icon(
+                  AppConstants.iconForWalletType(wallet.type),
+                  size: 12,
+                  color: AppConstants.colorForWalletType(wallet.type),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  wallet.name,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppConstants.colorForWalletType(wallet.type),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
-      isThreeLine: income.note != null && income.note!.isNotEmpty,
+      isThreeLine: income.note != null && income.note!.isNotEmpty || wallet != null,
       trailing: Text(
         CurrencyFormatter.format(income.amount),
         style: theme.textTheme.titleSmall?.copyWith(

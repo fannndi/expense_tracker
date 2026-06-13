@@ -6,6 +6,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.4.0] - 2026-06-13
+
+### Added
+
+#### Income Credits Wallet
+- **Income.walletId** — New optional field to link income to a wallet (nullable for backward compatibility)
+- **Wallet picker in IncomeForm** — Dropdown to select destination wallet when recording income
+- **Auto credit on save** — Income amount is automatically added to the selected wallet balance
+- **Auto debit on delete** — Deleting an income deducts the amount from the credited wallet
+- **Auto rebalance on edit** — Editing income refunds the old wallet and credits the new one
+- **Wallet badge in IncomeScreen** — `_IncomeTile` shows wallet icon and name in subtitle
+
+#### Transactional Safety (Income)
+- **Rollback on add** — If wallet credit fails, the created income is deleted
+- **Rollback on update** — If wallet operations fail, original income is restored
+- **Rollback on delete** — If wallet debit fails, the deleted income is restored
+
+### Changed
+- **IncomeForm** — Added wallet picker dropdown (defaults to first Cash wallet)
+- **IncomeProviders** — `addIncome`, `updateIncome`, `deleteIncome` now handle wallet credit/debit with rollback
+- **WalletsNotifier** — Added `creditWallet(walletId, amount)` method
+- **IncomeScreen** — Changed `_IncomeTile` from `StatelessWidget` to `ConsumerWidget` to access wallet data
+- **OnIncomeCallback** — Extended with optional `walletId` parameter
+
+---
+
 ## [1.3.0] - 2026-06-13
 
 ### Added

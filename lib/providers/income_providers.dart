@@ -6,6 +6,7 @@ import '../models/income.dart';
 import '../models/monthly_summary.dart';
 import '../repositories/income_repository.dart';
 import 'expense_providers.dart';
+import 'wallet_providers.dart';
 
 // ─── Infrastructure ────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ class IncomesNotifier extends AsyncNotifier<List<Income>> {
     required int amount,
     String? source,
     String? note,
+    String? walletId,
   }) async {
     final income = Income(
       id: 'inc_${const Uuid().v4()}',
@@ -42,18 +44,71 @@ class IncomesNotifier extends AsyncNotifier<List<Income>> {
       amount: amount,
       source: source,
       note: note,
+      walletId: walletId,
     );
     await ref.read(incomeRepositoryProvider).add(income);
+
+    if (walletId != null) {
+      try {
+        await ref
+            .read(walletsProvider.notifier)
+            .creditWallet(walletId, amount);
+      } catch (e) {
+        await ref.read(incomeRepositoryProvider).delete(income.id);
+        rethrow;
+      }
+    }
+
     await reload();
   }
 
-  Future<void> updateIncome(Income income) async {
-    await ref.read(incomeRepositoryProvider).update(income);
+  Future<void> updateIncome(Income updated) async {
+    final oldIncome = await ref.read(incomeRepositoryProvider).getAll().then(
+          (list) => list.firstWhere((i) => i.id == updated.id),
+        );
+
+    await ref.read(incomeRepositoryProvider).update(updated);
+
+    try {
+      // Refund old wallet (reverse original credit)
+      if (oldIncome.walletId != null) {
+        await ref
+            .read(walletsProvider.notifier)
+            .debitFromWallet(oldIncome.walletId!, oldIncome.amount);
+      }
+      // Credit new wallet
+      if (updated.walletId != null) {
+        await ref
+            .read(walletsProvider.notifier)
+            .creditWallet(updated.walletId!, updated.amount);
+      }
+    } catch (e) {
+      // Rollback: restore old income in storage
+      await ref.read(incomeRepositoryProvider).update(oldIncome);
+      rethrow;
+    }
+
     await reload();
   }
 
   Future<void> deleteIncome(String id) async {
+    final income = await ref.read(incomeRepositoryProvider).getAll().then(
+          (list) => list.firstWhere((i) => i.id == id),
+        );
+
     await ref.read(incomeRepositoryProvider).delete(id);
+
+    if (income.walletId != null) {
+      try {
+        await ref
+            .read(walletsProvider.notifier)
+            .debitFromWallet(income.walletId!, income.amount);
+      } catch (e) {
+        await ref.read(incomeRepositoryProvider).add(income);
+        rethrow;
+      }
+    }
+
     await reload();
   }
 }
@@ -125,7 +180,6 @@ final monthlyIncomeTrendProvider =
 
 // ─── Allowance periods ────────────────────────────────────────────────────
 
-/// A single allowance period: from [start] (inclusive) to [end] (inclusive).
 class AllowancePeriod {
   final DateTime start;
   final DateTime end;
@@ -137,17 +191,12 @@ class AllowancePeriod {
     required this.label,
   });
 
-  /// Short date range string, e.g. "15 Jan – 14 Feb"
   String get rangeLabel {
     final fmt = DateFormat('d MMM', 'en_US');
     return '${fmt.format(start)} – ${fmt.format(end)}';
   }
 }
 
-/// Derives allowance periods from [IncomeType.allowance] entries.
-/// Each period spans from one allowance date (inclusive) to the day before
-/// the next allowance (inclusive). The last period ends the day before today.
-/// Returned sorted newest-first. Empty list if no allowance entries exist.
 final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
   final incomesAsync = ref.watch(incomesProvider);
   final allIncomes = incomesAsync.valueOrNull ?? [];
@@ -177,7 +226,6 @@ final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
     } else {
       end = todayMidnight.subtract(const Duration(days: 1));
     }
-    // Skip degenerate periods where end < start (e.g. two allowances same day)
     if (end.isBefore(start)) continue;
 
     final monthLabel = DateFormat('MMMM yyyy', 'en_US').format(start);
@@ -185,7 +233,6 @@ final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
     periods.add(AllowancePeriod(start: start, end: end, label: label));
   }
 
-  // Newest-first
   periods.sort((a, b) => b.start.compareTo(a.start));
   return periods;
 });

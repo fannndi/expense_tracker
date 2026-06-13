@@ -51,8 +51,9 @@ class Income {
   final DateTime date;
   final IncomeType type;
   final int amount;
-  final String? source; // e.g. "Kakak", "PT ABC"
+  final String? source;
   final String? note;
+  final String? walletId;
 
   const Income({
     required this.id,
@@ -61,6 +62,7 @@ class Income {
     required this.amount,
     this.source,
     this.note,
+    this.walletId,
   });
 
   Income copyWith({
@@ -70,8 +72,10 @@ class Income {
     int? amount,
     String? source,
     String? note,
+    String? walletId,
     bool clearSource = false,
     bool clearNote = false,
+    bool clearWalletId = false,
   }) {
     return Income(
       id: id ?? this.id,
@@ -80,6 +84,7 @@ class Income {
       amount: amount ?? this.amount,
       source: clearSource ? null : (source ?? this.source),
       note: clearNote ? null : (note ?? this.note),
+      walletId: clearWalletId ? null : (walletId ?? this.walletId),
     );
   }
 
@@ -91,6 +96,7 @@ class Income {
       amount: json['amount'] as int,
       source: json['source'] as String?,
       note: json['note'] as String?,
+      walletId: json['walletId'] as String?,
     );
   }
 
@@ -102,6 +108,7 @@ class Income {
       'amount': amount,
       if (source != null && source!.isNotEmpty) 'source': source,
       if (note != null && note!.isNotEmpty) 'note': note,
+      if (walletId != null) 'walletId': walletId,
     };
   }
 

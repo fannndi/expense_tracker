@@ -62,8 +62,22 @@ Expense {
   amount: int
   note: String?
   isAutoFill: bool
-  walletId: String?   // NEW — wallet yang dipakai bayar
-  isTransfer: bool    // NEW — true jika ini top-up antar wallet
+  walletId: String?   // wallet yang dipakai bayar
+  isTransfer: bool    // true jika ini top-up antar wallet
+}
+```
+
+### Income (updated)
+
+```
+Income {
+  id: String
+  date: DateTime
+  type: IncomeType    // allowance | fromPerson | project | other
+  amount: int
+  source: String?
+  note: String?
+  walletId: String?   // NEW — wallet yang dikredit (opsional)
 }
 ```
 
@@ -126,11 +140,16 @@ Semua data disimpan di satu file JSON: `expenses.json`
 | File | Changes |
 |---|---|
 | `lib/models/expense.dart` | +`walletId`, +`isTransfer`, updated copyWith/fromJson/toJson |
+| `lib/models/income.dart` | +`walletId`, updated copyWith/fromJson/toJson |
 | `lib/services/storage_service.dart` | +`loadWallets()`, +`saveWallets()` |
+| `lib/providers/income_providers.dart` | `addIncome`/`updateIncome`/`deleteIncome` credit/debit wallet with rollback |
 | `lib/providers/expense_providers.dart` | +`grandTotalBalanceProvider`, all spending providers exclude transfers |
+| `lib/providers/wallet_providers.dart` | +`creditWallet()` method |
 | `lib/screens/expense_form/widgets/expense_form.dart` | +wallet picker dropdown, updated OnSaveCallback |
 | `lib/screens/expense_form/add_expense_screen.dart` | Wallet balance debit on save |
 | `lib/screens/expense_form/edit_expense_screen.dart` | Wallet balance refund on edit/delete |
+| `lib/screens/income/widgets/income_form.dart` | +wallet picker dropdown |
+| `lib/screens/income/income_screen.dart` | +wallet badge in `_IncomeTile` |
 | `lib/screens/home/home_screen.dart` | +wallet summary section |
 | `lib/screens/home/widgets/balance_card.dart` | +TotalBalanceSection widget |
 | `lib/screens/shell/main_shell.dart` | 5-tab bottom navigation |
@@ -176,7 +195,18 @@ Semua data disimpan di satu file JSON: `expenses.json`
 - Ini adalah jumlah seluruh uang kamu di semua wallet
 - Di bawahnya ada **ringkasan wallet** dalam bentuk horizontal scrollable cards
 
-### 5. Mengedit/Menghapus Wallet
+### 5. Mencatat Income dengan Wallet
+
+1. Buka tab **Pemasukan** (tab ke-2 dari kiri)
+2. Ketuk tombol **+** (FAB)
+3. Pilih jenis income, masukkan jumlah, dan isi sumber/catatan
+4. Di bagian **"Dompet Tujuan"** — pilih wallet yang akan dikredit
+5. Ketuk **Simpan**
+6. Saldo wallet yang dipilih otomatis bertambah sesuai jumlah income
+7. Jika mengedit income: saldo wallet lama dikembalikan, lalu wallet baru dikredit
+8. Jika menghapus income: saldo wallet otomatis berkurang (dibatalkan)
+
+### 6. Mengedit/Menghapus Wallet
 
 1. Ketuk wallet card di tab Dompet
 2. Edit nama atau tipe
@@ -188,7 +218,7 @@ Semua data disimpan di satu file JSON: `expenses.json`
 ## Business Rules
 
 | Rule | Detail |
-|---|---|
+|---|---|---|
 | Top-up tidak mengubah Total Saldo | Karena cuma transfer antar wallet |
 | Top-up tercatat sebagai expense | Dengan flag `isTransfer: true` |
 | Expense transfer tidak dihitung di statistik | Pie chart, trend, breakdown exclude transfer |
@@ -196,6 +226,10 @@ Semua data disimpan di satu file JSON: `expenses.json`
 | Delete expense mengembalikan saldo wallet | Saldo wallet di-refund |
 | Edit expense menyesuaikan saldo wallet | Saldo lama di-refund, saldo baru di-debit |
 | Default wallet untuk expense | Wallet tipe Cash pertama yang tersedia |
+| **Income menambah saldo wallet** | Saat income dicatat, wallet tujuan otomatis dikredit |
+| **Delete income mengurangi saldo wallet** | Saldo wallet dikembalikan (debit balik) |
+| **Edit income** | Wallet lama di-refund, wallet baru di-kredit |
+| **Income walletId opsional** | Untuk kompatibilitas dengan data lama yang belum punya wallet |
 
 ---
 
@@ -241,10 +275,11 @@ Semua string tersedia dalam **English** dan **Bahasa Indonesia**:
 ### WalletsNotifier Methods
 
 | Method | Description |
-|---|---|
+|---|---|---|
 | `addWallet(name, type)` | Buat wallet baru, saldo awal 0 |
 | `updateWallet(wallet)` | Edit nama/tipe wallet |
 | `deleteWallet(id)` | Hapus wallet (error jika saldo > 0) |
 | `debitFromWallet(id, amount)` | Kurangi saldo wallet |
 | `refundToWallet(id, amount)` | Tambah saldo wallet (untuk refund) |
+| `creditWallet(id, amount)` | Tambah saldo wallet (untuk income) |
 | `topUpWallet(sourceId, destId, amount)` | Transfer antar wallet |

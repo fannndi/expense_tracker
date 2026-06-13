@@ -65,6 +65,16 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
     await updateWallet(wallet.copyWith(balance: wallet.balance - amount));
   }
 
+  /// Tambah saldo wallet (untuk credit dari income atau refund expense)
+  Future<void> creditWallet(String walletId, int amount) async {
+    final wallets = state.valueOrNull ?? [];
+    final wallet = wallets.firstWhere(
+      (w) => w.id == walletId,
+      orElse: () => throw Exception('Wallet not found'),
+    );
+    await updateWallet(wallet.copyWith(balance: wallet.balance + amount));
+  }
+
   /// Tambah saldo wallet (untuk refund saat delete expense)
   Future<void> refundToWallet(String walletId, int amount) async {
     final wallets = state.valueOrNull ?? [];

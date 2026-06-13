@@ -6,7 +6,7 @@ A Flutter Android application for personal expense tracking, designed for univer
 
 ### Expense & Income
 - **Add / Edit Expense** — Amount, category, date picker, optional note, wallet selection; full edit and delete with confirmation
-- **Income Tracking** — Record allowance, payments from others, projects, and other income sources
+- **Income Tracking** — Record allowance, payments from others, projects, and other income sources; income automatically credits the selected wallet balance
 - **Auto-fill System** — Automatic entries for missing weekday spending (daily 23:00 notification)
 
 ### Reminder / Recurring Payments
@@ -21,6 +21,7 @@ A Flutter Android application for personal expense tracking, designed for univer
 - **Wallet Balance** — Each wallet tracks its own balance independently
 - **Top-up** — Transfer funds between wallets (e.g., cash to GoPay), recorded as expense + balance transfer
 - **Payment Source** — Select which wallet to use when recording expenses
+- **Income Credit** — Income automatically adds to the selected wallet balance
 
 ### Total Saldo (Grand Total Balance)
 - **Real-time Balance** — See your total money across all wallets at a glance
@@ -100,20 +101,17 @@ All data is stored locally in `app_data.json` inside the app's documents directo
 {
   "version": 2,
   "expenses": [...],
-  "incomes": [...],
-  "wallets": [...],
-  "reminders": [
+  "incomes": [
     {
-      "id": "rem_xxx",
-      "title": "Paket Data",
-      "category": "Internet",
-      "amount": 50000,
-      "recurrence": "customDays",
-      "customIntervalDays": 28,
-      "nextDueDate": "2026-07-11T00:00:00Z",
-      "isActive": true
+      "id": "inc_xxx",
+      "date": "2026-06-13T00:00:00Z",
+      "type": "allowance",
+      "amount": 500000,
+      "walletId": "wal_xxx"    // income credited to this wallet
     }
-  ]
+  ],
+  "wallets": [...],
+  "reminders": [...]
 }
 ```
 

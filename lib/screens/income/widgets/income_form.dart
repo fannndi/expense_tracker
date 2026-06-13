@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_strings.dart';
 import '../../../models/income.dart';
+import '../../../models/wallet.dart';
 import '../../../providers/settings_provider.dart';
+import '../../../providers/wallet_providers.dart';
+import '../../../utils/constants.dart';
 import '../../../utils/currency_input_formatter.dart';
 import '../../../utils/date_formatter.dart';
 
@@ -14,6 +17,7 @@ typedef OnIncomeCallback = Future<void> Function({
   required DateTime date,
   String? source,
   String? note,
+  String? walletId,
 });
 
 class IncomeForm extends ConsumerStatefulWidget {
@@ -39,6 +43,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
   late final TextEditingController _noteCtrl;
   late IncomeType _selectedType;
   late DateTime _selectedDate;
+  String? _selectedWalletId;
 
   @override
   void initState() {
@@ -55,6 +60,18 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
     _noteCtrl = TextEditingController(text: i?.note ?? '');
     _selectedType = i?.type ?? IncomeType.allowance;
     _selectedDate = i?.date ?? DateTime.now();
+    _selectedWalletId = i?.walletId;
+
+    if (_selectedWalletId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final wallets = ref.read(walletsProvider).valueOrNull ?? [];
+        final cashWallets =
+            wallets.where((w) => w.type == WalletType.cash).toList();
+        if (cashWallets.isNotEmpty && mounted) {
+          setState(() => _selectedWalletId = cashWallets.first.id);
+        }
+      });
+    }
   }
 
   @override
@@ -95,6 +112,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
       date: _selectedDate,
       source: _sourceCtrl.text.trim().isEmpty ? null : _sourceCtrl.text.trim(),
       note: _noteCtrl.text.trim().isEmpty ? null : _noteCtrl.text.trim(),
+      walletId: _selectedWalletId,
     );
   }
 
@@ -184,6 +202,10 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
             ),
             const SizedBox(height: 16),
 
+            // ── Wallet picker (receive to) ────────────────────────────────
+            _buildWalletPicker(s),
+            const SizedBox(height: 16),
+
             // ── Source ─────────────────────────────────────────────────
             TextFormField(
               controller: _sourceCtrl,
@@ -244,6 +266,70 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildWalletPicker(AppStrings s) {
+    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedWalletId,
+      decoration: InputDecoration(
+        labelText: s.payFrom,
+        border: const OutlineInputBorder(),
+        prefixIcon: _selectedWalletId != null
+            ? _buildWalletIcon(
+                wallets.firstWhere(
+                  (w) => w.id == _selectedWalletId,
+                  orElse: () => wallets.first,
+                ),
+              )
+            : const Icon(Icons.account_balance_wallet_outlined),
+      ),
+      isExpanded: true,
+      items: [
+        DropdownMenuItem<String>(
+          value: null,
+          child: Text('-- ${s.all} --'),
+        ),
+        ...wallets.map((w) {
+          final color = AppConstants.colorForWalletType(w.type);
+          return DropdownMenuItem<String>(
+            value: w.id,
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(35),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    AppConstants.iconForWalletType(w.type),
+                    color: color,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(w.name)),
+              ],
+            ),
+          );
+        }),
+      ],
+      onChanged: (v) => setState(() => _selectedWalletId = v),
+    );
+  }
+
+  Widget _buildWalletIcon(Wallet wallet) {
+    final color = AppConstants.colorForWalletType(wallet.type);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Icon(
+        AppConstants.iconForWalletType(wallet.type),
+        color: color,
       ),
     );
   }

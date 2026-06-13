@@ -30,6 +30,7 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
     required DateTime date,
     String? source,
     String? note,
+    String? walletId,
   }) async {
     final s = _s;
     setState(() => _loading = true);
@@ -42,6 +43,8 @@ class _EditIncomeScreenState extends ConsumerState<EditIncomeScreen> {
         note: note,
         clearSource: source == null || source.isEmpty,
         clearNote: note == null || note.isEmpty,
+        clearWalletId: walletId == null,
+        walletId: walletId,
       );
       await ref.read(incomesProvider.notifier).updateIncome(updated);
       if (mounted) Navigator.of(context).pop();

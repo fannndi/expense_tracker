@@ -23,6 +23,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
     required DateTime date,
     String? source,
     String? note,
+    String? walletId,
   }) async {
     final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
@@ -35,6 +36,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
             date: date,
             source: source,
             note: note,
+            walletId: walletId,
           );
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
