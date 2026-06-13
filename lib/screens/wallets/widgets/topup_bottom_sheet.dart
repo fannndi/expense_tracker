@@ -215,14 +215,6 @@ class _TopUpBottomSheetState extends ConsumerState<TopUpBottomSheet> {
                 final n = ThousandSeparatorFormatter.parseFormatted(v.trim());
                 if (n == null) return s.enterValidNumber;
                 if (n <= 0) return s.amountGreaterThanZero;
-                // Check source balance
-                if (_selectedSourceId != null) {
-                  final source = sourceWallets.firstWhere(
-                    (w) => w.id == _selectedSourceId,
-                    orElse: () => widget.destinationWallet,
-                  );
-                  if (n > source.balance) return s.insufficientBalance;
-                }
                 return null;
               },
             ),

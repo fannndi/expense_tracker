@@ -99,9 +99,6 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
       (w) => w.id == destId,
       orElse: () => throw Exception('Destination wallet not found'),
     );
-    if (source.balance < amount) {
-      throw Exception('Insufficient balance');
-    }
 
     // Update kedua wallet sekaligus
     final updatedSource = source.copyWith(balance: source.balance - amount);
