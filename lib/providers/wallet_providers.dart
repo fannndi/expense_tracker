@@ -53,15 +53,14 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
   }
 
   /// Kurangi saldo wallet (untuk expense biasa)
+  /// Tidak ada pengecekan saldo agar wallet bisa negatif (realistis untuk
+  /// kartu kredit / e-money yang mungkin dipakai meski catatan saldo kosong)
   Future<void> debitFromWallet(String walletId, int amount) async {
     final wallets = state.valueOrNull ?? [];
     final wallet = wallets.firstWhere(
       (w) => w.id == walletId,
       orElse: () => throw Exception('Wallet not found'),
     );
-    if (wallet.balance < amount) {
-      throw Exception('Insufficient balance');
-    }
     await updateWallet(wallet.copyWith(balance: wallet.balance - amount));
   }
 

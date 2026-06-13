@@ -134,6 +134,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
       isExpanded: true,
       items: wallets.map((w) {
         final color = AppConstants.colorForWalletType(w.type);
+        final formatted = _formatBalance(w.balance);
         return DropdownMenuItem<String>(
           value: w.id,
           child: Row(
@@ -152,13 +153,35 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(w.name)),
+              Expanded(
+                child: Text(
+                  w.name,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                formatted,
+                style: TextStyle(
+                  color: w.balance >= 0 ? null : Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         );
       }).toList(),
       onChanged: (v) => setState(() => _selectedWalletId = v),
     );
+  }
+
+  String _formatBalance(int balance) {
+    final isNegative = balance < 0;
+    final abs = isNegative ? -balance : balance;
+    final formatted = abs.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+    return 'Rp ${isNegative ? '-' : ''}$formatted';
   }
 
   Widget _buildWalletIcon(Wallet wallet) {
