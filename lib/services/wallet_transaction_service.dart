@@ -18,7 +18,7 @@ class WalletTransactionService {
     bool isTransfer = false,
     String? reminderId,
   }) async {
-    await _ref.read(expensesProvider.notifier).addExpense(
+    final expenseId = await _ref.read(expensesProvider.notifier).addExpense(
           date: date,
           category: category,
           amount: amount,
@@ -32,8 +32,7 @@ class WalletTransactionService {
       try {
         await _ref.read(walletsProvider.notifier).debitFromWallet(walletId, amount);
       } catch (e) {
-        final lastId = await _findLastExpenseId(date, category, amount);
-        await _ref.read(expensesProvider.notifier).deleteExpense(lastId);
+        await _ref.read(expensesProvider.notifier).deleteExpense(expenseId);
         rethrow;
       }
     }
@@ -108,11 +107,17 @@ class WalletTransactionService {
     required int amount,
     required String destName,
   }) async {
-    await _ref.read(walletsProvider.notifier).topUpWallet(
-          sourceId: sourceId,
-          destId: destId,
-          amount: amount,
-        );
+    bool walletUpdated = false;
+    try {
+      await _ref.read(walletsProvider.notifier).topUpWallet(
+            sourceId: sourceId,
+            destId: destId,
+            amount: amount,
+          );
+      walletUpdated = true;
+    } catch (e) {
+      rethrow;
+    }
 
     try {
       await _ref.read(expensesProvider.notifier).addExpense(
@@ -124,42 +129,27 @@ class WalletTransactionService {
             isTransfer: true,
           );
     } catch (e) {
-      final wallets = _ref.read(walletsProvider).valueOrNull ?? [];
-      final source = wallets.firstWhere(
-        (w) => w.id == sourceId,
-        orElse: () => wallets.first,
-      );
-      final dest = wallets.firstWhere(
-        (w) => w.id == destId,
-        orElse: () => wallets.first,
-      );
-      await _ref.read(walletsProvider.notifier).updateWallet(
-            source.copyWith(balance: source.balance + amount),
-          );
-      await _ref.read(walletsProvider.notifier).updateWallet(
-            dest.copyWith(balance: dest.balance - amount),
-          );
-      await _ref.read(walletsProvider.notifier).reload();
+      // Only reverse wallet if topUpWallet succeeded
+      if (walletUpdated) {
+        final wallets = _ref.read(walletsProvider).valueOrNull ?? [];
+        final source = wallets.firstWhere(
+          (w) => w.id == sourceId,
+          orElse: () => wallets.first,
+        );
+        final dest = wallets.firstWhere(
+          (w) => w.id == destId,
+          orElse: () => wallets.first,
+        );
+        await _ref.read(walletsProvider.notifier).updateWallet(
+              source.copyWith(balance: source.balance + amount),
+            );
+        await _ref.read(walletsProvider.notifier).updateWallet(
+              dest.copyWith(balance: dest.balance - amount),
+            );
+        await _ref.read(walletsProvider.notifier).reload();
+      }
       rethrow;
     }
-  }
-
-  Future<String> _findLastExpenseId(
-    DateTime date,
-    String category,
-    int amount,
-  ) async {
-    final expenses = _ref.read(expensesProvider).valueOrNull ?? [];
-    final match = expenses.lastWhere(
-      (e) =>
-          e.date.year == date.year &&
-          e.date.month == date.month &&
-          e.date.day == date.day &&
-          e.category == category &&
-          e.amount == amount,
-      orElse: () => expenses.last,
-    );
-    return match.id;
   }
 }
 

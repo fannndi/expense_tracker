@@ -33,7 +33,7 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
     );
   }
 
-  Future<void> addExpense({
+  Future<String> addExpense({
     required DateTime date,
     required String category,
     required int amount,
@@ -54,6 +54,7 @@ class ExpensesNotifier extends AsyncNotifier<List<Expense>> {
     );
     await ref.read(expenseRepositoryProvider).add(expense);
     await reload();
+    return expense.id;
   }
 
   Future<void> updateExpense(Expense expense) async {

@@ -69,12 +69,14 @@ class IncomesNotifier extends AsyncNotifier<List<Income>> {
 
     await ref.read(incomeRepositoryProvider).update(updated);
 
+    bool oldWalletDebited = false;
     try {
       // Refund old wallet (reverse original credit)
       if (oldIncome.walletId != null) {
         await ref
             .read(walletsProvider.notifier)
             .debitFromWallet(oldIncome.walletId!, oldIncome.amount);
+        oldWalletDebited = true;
       }
       // Credit new wallet
       if (updated.walletId != null) {
@@ -85,6 +87,16 @@ class IncomesNotifier extends AsyncNotifier<List<Income>> {
     } catch (e) {
       // Rollback: restore old income in storage
       await ref.read(incomeRepositoryProvider).update(oldIncome);
+      // Rollback: restore old wallet balance if it was already debited
+      if (oldWalletDebited && oldIncome.walletId != null) {
+        try {
+          await ref
+              .read(walletsProvider.notifier)
+              .creditWallet(oldIncome.walletId!, oldIncome.amount);
+        } catch (_) {
+          // If rollback fails, log but don't rethrow to avoid masking original error
+        }
+      }
       rethrow;
     }
 
