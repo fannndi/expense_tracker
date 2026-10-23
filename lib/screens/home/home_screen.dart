@@ -11,6 +11,7 @@ import '../../routes/app_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
+import '../../utils/design_tokens.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
 import '../../widgets/share_pdf_bottom_sheet.dart';
@@ -89,7 +90,7 @@ class HomeScreen extends ConsumerWidget {
 
             // Summary cards row
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
               child: Row(
                 children: [
                   Expanded(
@@ -139,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
 
             // Pie chart
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
               child: breakdown.when(
                 data: (summaries) => summaries.isEmpty
                     ? const SizedBox.shrink()
@@ -156,7 +157,7 @@ class HomeScreen extends ConsumerWidget {
 
             // Category breakdown
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
               child: breakdown.when(
                 data: (summaries) => summaries.isEmpty
                     ? Card(
@@ -190,7 +191,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: DesignTokens.space20),
 
             // Wallet summary section
             _WalletSummarySection(),
@@ -250,7 +251,7 @@ class _WalletSummarySection extends ConsumerWidget {
     final walletsAsync = ref.watch(walletsProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -278,7 +279,7 @@ class _WalletSummarySection extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     onTap: () => context.push(AppRoutes.addWallet),
                     child: Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(DesignTokens.space20),
                       child: Center(
                         child: Column(
                           children: [
@@ -373,7 +374,7 @@ class _WalletSummarySection extends ConsumerWidget {
             ),
             error: (e, _) => Card(
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(DesignTokens.space20),
                 child: Center(child: Text('Error: $e')),
               ),
             ),
