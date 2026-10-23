@@ -8,6 +8,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/wallet_providers.dart';
 import '../../routes/app_router.dart';
 import '../../utils/currency_formatter.dart';
+import '../../utils/design_tokens.dart';
 import 'widgets/topup_bottom_sheet.dart';
 import 'widgets/wallet_card.dart';
 
@@ -33,13 +34,13 @@ class WalletScreen extends ConsumerWidget {
           await ref.read(walletsProvider.notifier).reload();
         },
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(DesignTokens.space20),
           children: [
             // Total balance card
             Card(
               color: Theme.of(context).colorScheme.primaryContainer,
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(DesignTokens.space20),
                 child: Column(
                   children: [
                     Text(
@@ -50,7 +51,7 @@ class WalletScreen extends ConsumerWidget {
                                 .onPrimaryContainer,
                           ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: DesignTokens.space8),
                     totalBalance.when(
                       data: (total) => Text(
                         CurrencyFormatter.format(total),
@@ -71,7 +72,7 @@ class WalletScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: DesignTokens.space20),
 
             // Wallet list
             walletsAsync.when(
@@ -90,7 +91,7 @@ class WalletScreen extends ConsumerWidget {
                                 .onSurfaceVariant
                                 .withAlpha(100),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: DesignTokens.space16),
                           Text(
                             s.noWallets,
                             style: Theme.of(context)
@@ -102,7 +103,7 @@ class WalletScreen extends ConsumerWidget {
                                       .onSurfaceVariant,
                                 ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: DesignTokens.space8),
                           Text(
                             s.createFirstWallet,
                             style: Theme.of(context)
@@ -129,7 +130,7 @@ class WalletScreen extends ConsumerWidget {
                       wallets.where((w) => w.type == WalletType.cash).toList(),
                       s.walletTypeCash,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space16),
 
                     ..._buildSection(
                       context,
@@ -138,7 +139,7 @@ class WalletScreen extends ConsumerWidget {
                       wallets.where((w) => w.type == WalletType.eMoney).toList(),
                       s.walletTypeEMoney,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space16),
 
                     ..._buildSection(
                       context,
@@ -154,7 +155,7 @@ class WalletScreen extends ConsumerWidget {
               },
               loading: () => const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(40),
+                  padding: EdgeInsets.all(DesignTokens.space32 + 8),
                   child: CircularProgressIndicator(),
                 ),
               ),
@@ -189,7 +190,7 @@ class WalletScreen extends ConsumerWidget {
               fontWeight: FontWeight.w600,
             ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: DesignTokens.space8),
       ...wallets.map((wallet) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: WalletCard(
