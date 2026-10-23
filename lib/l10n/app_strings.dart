@@ -139,6 +139,7 @@ abstract class AppStrings {
   String get importDataConfirm;
   String get dataImported;
   String get importFailed;
+  String get amountTooLarge;
   String get reminders;
   String get addReminder;
   String get editReminder;
@@ -351,6 +352,7 @@ class _EnStrings extends AppStrings {
   @override String get recordPayment => 'Record Payment';
   @override String get reminderTitle => 'Title';
   @override String get importFailed => 'Import failed: invalid file';
+  @override String get amountTooLarge => 'Amount is too large';
   @override String generateReportFor(String m) => 'Generate and share a report for $m';
   @override String noDataFor(String m) => 'No data for $m';
 }
@@ -513,6 +515,7 @@ class _IdStrings extends AppStrings {
   @override String get recordPayment => 'Catat Pembayaran';
   @override String get reminderTitle => 'Judul';
   @override String get importFailed => 'Impor gagal: file tidak valid';
+  @override String get amountTooLarge => 'Jumlah terlalu besar';
   @override String generateReportFor(String m) => 'Buat dan bagikan laporan untuk $m';
   @override String noDataFor(String m) => 'Tidak ada data untuk $m';
 }

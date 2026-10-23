@@ -260,6 +260,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
                   return s.amountGreaterThanZero;
                 }
                 if (n < 0) return s.amountNotNegative;
+                if (n > 1000000000) return s.amountTooLarge;
                 return null;
               },
             ),

@@ -197,6 +197,7 @@ class _IncomeFormState extends ConsumerState<IncomeForm> {
                     ThousandSeparatorFormatter.parseFormatted(v.trim());
                 if (n == null) return s.enterValidNumber;
                 if (n <= 0) return s.amountGreaterThanZero;
+                if (n > 1000000000) return s.amountTooLarge;
                 return null;
               },
             ),
