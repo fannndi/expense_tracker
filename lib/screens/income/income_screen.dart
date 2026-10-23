@@ -11,6 +11,7 @@ import '../../routes/app_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
+import '../../utils/design_tokens.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
@@ -53,7 +54,7 @@ class IncomeScreen extends ConsumerWidget {
             // Summary header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                padding: const EdgeInsets.fromLTRB(DesignTokens.space16, DesignTokens.space8, DesignTokens.space16, 0),
                 child: Column(
                   children: [
                     // Month income card
@@ -63,11 +64,11 @@ class IncomeScreen extends ConsumerWidget {
                       balance: balance,
                       s: s,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space16),
 
                     // Type breakdown chips
                     _IncomeTypeBreakdown(month: now),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: DesignTokens.space8),
 
                     Align(
                       alignment: Alignment.centerLeft,
@@ -161,7 +162,7 @@ class _IncomeMonthCard extends StatelessWidget {
     return Card(
       color: cs.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(DesignTokens.space20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,7 +172,7 @@ class _IncomeMonthCard extends StatelessWidget {
                 color: cs.onPrimaryContainer.withAlpha(180),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DesignTokens.space8),
             Row(
               children: [
                 Expanded(
