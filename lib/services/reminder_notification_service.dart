@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../models/reminder.dart';
@@ -18,11 +19,13 @@ class ReminderNotificationService {
   Future<void> init() async {
     if (_initialized) return;
 
+    tzdata.initializeTimeZones();
+
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const settings = InitializationSettings(android: androidSettings);
 
-    await _plugin.initialize(settings);
+    await _plugin.initialize(settings: settings);
 
     _initialized = true;
   }
@@ -42,18 +45,18 @@ class ReminderNotificationService {
     );
 
     if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
+      scheduled = now.add(const Duration(minutes: 1));
     }
 
     final formattedAmount =
         _formatAmount(reminder.amount);
 
     await _plugin.zonedSchedule(
-      reminder.notificationId,
-      '${reminder.title} — Rp $formattedAmount',
-      'Jatuh tempo hari ini. Ketuk untuk mencatat pembayaran.',
-      scheduled,
-      NotificationDetails(
+      id: reminder.notificationId,
+      title: '${reminder.title} — Rp $formattedAmount',
+      body: 'Jatuh tempo hari ini. Ketuk untuk mencatat pembayaran.',
+      scheduledDate: scheduled,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -64,8 +67,6 @@ class ReminderNotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: null,
     );
 
@@ -74,7 +75,7 @@ class ReminderNotificationService {
   }
 
   Future<void> cancelReminder(int notificationId) async {
-    await _plugin.cancel(notificationId);
+    await _plugin.cancel(id: notificationId);
   }
 
   Future<void> rescheduleReminder(Reminder reminder) async {

@@ -13,6 +13,11 @@ class BackupService {
     return File('${dir.path}/${AppConstants.dataFileName}');
   }
 
+  Future<File> _getTempFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/${AppConstants.dataFileName}.import.tmp');
+  }
+
   Future<String?> exportData() async {
     try {
       final file = await _getDataFile();
@@ -35,17 +40,33 @@ class BackupService {
       if (!await sourceFile.exists()) return false;
 
       final content = await sourceFile.readAsString();
-      final data = jsonDecode(content) as Map<String, dynamic>;
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return false;
+      final data = decoded;
 
       if (!data.containsKey('expenses') &&
           !data.containsKey('incomes') &&
-          !data.containsKey('wallets')) {
+          !data.containsKey('wallets') &&
+          !data.containsKey('reminders')) {
         return false;
       }
 
       final destFile = await _getDataFile();
+      final tempFile = await _getTempFile();
+
+      if (await destFile.exists()) {
+        try {
+          await destFile.copy('${destFile.path}.bak');
+        } catch (_) {}
+      }
+
       const encoder = JsonEncoder.withIndent('  ');
-      await destFile.writeAsString(encoder.convert(data));
+      await tempFile.writeAsString(encoder.convert(data));
+
+      if (await destFile.exists()) {
+        await destFile.delete();
+      }
+      await tempFile.rename(destFile.path);
 
       return true;
     } catch (e) {
@@ -57,7 +78,9 @@ class BackupService {
   Future<void> shareExport() async {
     final path = await exportData();
     if (path != null) {
-      await Share.share('Expense Tracker Backup: $path');
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(path)], text: 'Expense Tracker Backup'),
+      );
     }
   }
 }

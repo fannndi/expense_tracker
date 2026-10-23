@@ -82,8 +82,12 @@ class FilterNotifier extends Notifier<ExpenseFilter> {
     return ExpenseFilter(year: now.year, month: now.month);
   }
 
-  void setMonth(int year, int month) {
+  void setMonth(int? year, int? month) {
     state = state.copyWith(year: year, month: month);
+  }
+
+  void clearMonth() {
+    state = state.copyWith(year: null, month: null);
   }
 
   void setCategory(String? category) {

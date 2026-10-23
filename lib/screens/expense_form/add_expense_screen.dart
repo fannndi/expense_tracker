@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../l10n/app_strings.dart';
 import '../../models/reminder.dart';
@@ -28,57 +27,61 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     bool isTransfer = false,
     ReminderData? reminderData,
   }) async {
-    final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     setState(() => _loading = true);
     try {
-      await ref.read(walletTransactionServiceProvider).addExpenseWithWalletDebit(
-            date: date,
-            category: category,
-            amount: amount,
-            note: note,
-            walletId: walletId,
-            isTransfer: isTransfer,
-          );
+      String? reminderId;
 
       if (reminderData != null && !isTransfer) {
         final title = note ?? s.categoryDisplayName(category);
-        final now = DateTime.now();
         final nextDueDate = _computeInitialNextDueDate(reminderData);
 
-        final id = 'rem_${const Uuid().v4()}';
-        final reminder = Reminder(
-          id: id,
-          title: title,
-          category: category,
-          amount: amount,
-          note: note,
-          walletId: walletId,
-          recurrence: reminderData.recurrence,
-          dayOfMonth: reminderData.dayOfMonth,
-          customIntervalDays: reminderData.customIntervalDays,
-          nextDueDate: nextDueDate,
-          isActive: true,
-          createdAt: now,
-          notificationId: Reminder.notificationIdFor(id),
-        );
-
-        await ref.read(remindersProvider.notifier).addReminder(
-              title: reminder.title,
-              category: reminder.category,
-              amount: reminder.amount,
-              note: reminder.note,
-              walletId: reminder.walletId,
-              recurrence: reminder.recurrence,
-              dayOfMonth: reminder.dayOfMonth,
-              customIntervalDays: reminder.customIntervalDays,
-              nextDueDate: reminder.nextDueDate,
+        final created = await ref.read(remindersProvider.notifier).addReminder(
+              title: title,
+              category: category,
+              amount: amount,
+              note: note,
+              walletId: walletId,
+              recurrence: reminderData.recurrence,
+              dayOfMonth: reminderData.dayOfMonth,
+              customIntervalDays: reminderData.customIntervalDays,
+              nextDueDate: nextDueDate,
             );
 
-        await ref
-            .read(reminderNotificationServiceProvider)
-            .scheduleReminder(reminder);
+        reminderId = created.id;
+
+        try {
+          await ref
+              .read(reminderNotificationServiceProvider)
+              .scheduleReminder(created);
+        } catch (_) {
+          // Notification scheduling is best-effort; keep reminder.
+        }
+      }
+
+      try {
+        await ref.read(walletTransactionServiceProvider).addExpenseWithWalletDebit(
+              date: date,
+              category: category,
+              amount: amount,
+              note: note,
+              walletId: walletId,
+              isTransfer: isTransfer,
+              reminderId: reminderId,
+            );
+      } catch (e) {
+        // Roll back reminder if expense (or wallet debit) failed.
+        if (reminderId != null) {
+          try {
+            await ref.read(remindersProvider.notifier).deleteReminder(reminderId);
+            await ref
+                .read(reminderNotificationServiceProvider)
+                .cancelReminder(Reminder.notificationIdFor(reminderId));
+          } catch (_) {}
+        }
+        rethrow;
       }
 
       if (mounted) Navigator.of(context).pop();
@@ -114,7 +117,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     return Scaffold(

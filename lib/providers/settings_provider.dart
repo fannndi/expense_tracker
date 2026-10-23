@@ -22,14 +22,31 @@ class AppSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        'themeMode': themeMode.index,
+        'themeMode': themeMode.name,
         'locale': locale.languageCode,
       };
 
-  factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
-        themeMode: ThemeMode.values[json['themeMode'] as int? ?? 0],
-        locale: Locale(json['locale'] as String? ?? 'en'),
+  factory AppSettings.fromJson(Map<String, dynamic> json) {
+    final rawTheme = json['themeMode'];
+    final themeName = rawTheme is String ? rawTheme : null;
+    ThemeMode themeMode;
+    if (themeName != null) {
+      themeMode = ThemeMode.values.firstWhere(
+        (m) => m.name == themeName,
+        orElse: () => ThemeMode.system,
       );
+    } else if (rawTheme is int &&
+        rawTheme >= 0 &&
+        rawTheme < ThemeMode.values.length) {
+      themeMode = ThemeMode.values[rawTheme];
+    } else {
+      themeMode = ThemeMode.system;
+    }
+    return AppSettings(
+      themeMode: themeMode,
+      locale: Locale(json['locale'] as String? ?? 'en'),
+    );
+  }
 }
 
 class SettingsNotifier extends AsyncNotifier<AppSettings> {
@@ -63,14 +80,14 @@ class SettingsNotifier extends AsyncNotifier<AppSettings> {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    final current = state.valueOrNull ?? const AppSettings();
+    final current = state.value ?? const AppSettings();
     final updated = current.copyWith(themeMode: mode);
     state = AsyncData(updated);
     await _save(updated);
   }
 
   Future<void> setLocale(Locale locale) async {
-    final current = state.valueOrNull ?? const AppSettings();
+    final current = state.value ?? const AppSettings();
     final updated = current.copyWith(locale: locale);
     state = AsyncData(updated);
     await _save(updated);

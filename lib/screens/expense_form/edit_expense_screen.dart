@@ -21,7 +21,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
   bool _loading = false;
 
   AppStrings get _s {
-    final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
     return settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
   }
 
@@ -109,7 +109,7 @@ class _EditExpenseScreenState extends ConsumerState<EditExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     return Scaffold(

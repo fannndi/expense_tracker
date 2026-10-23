@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.student.student_expense_tracker"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

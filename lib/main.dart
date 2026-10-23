@@ -71,7 +71,7 @@ class _StudentExpenseTrackerAppState
   Widget build(BuildContext context) {
     // Watch settings — rebuild MaterialApp setiap kali locale/theme berubah
     final settings =
-        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.watch(settingsProvider).value ?? const AppSettings();
 
     return MaterialApp.router(
       title: AppConstants.appName,

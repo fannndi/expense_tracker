@@ -43,7 +43,7 @@ class _TopUpBottomSheetState extends ConsumerState<TopUpBottomSheet> {
   void initState() {
     super.initState();
     // Default source: first cash wallet
-    final wallets = ref.read(walletsProvider).valueOrNull ?? [];
+    final wallets = ref.read(walletsProvider).value ?? [];
     final cashWallets =
         wallets.where((w) => w.type == WalletType.cash).toList();
     if (cashWallets.isNotEmpty) {
@@ -59,7 +59,7 @@ class _TopUpBottomSheetState extends ConsumerState<TopUpBottomSheet> {
 
   AppStrings get _s {
     final settings =
-        ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.read(settingsProvider).value ?? const AppSettings();
     return settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
   }
 
@@ -97,7 +97,7 @@ class _TopUpBottomSheetState extends ConsumerState<TopUpBottomSheet> {
     final s = _s;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+    final wallets = ref.watch(walletsProvider).value ?? [];
     final sourceWallets =
         wallets.where((w) => w.id != widget.destinationWallet.id).toList();
 

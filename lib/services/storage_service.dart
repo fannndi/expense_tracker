@@ -90,6 +90,8 @@ class StorageService {
             .toList();
       } on FormatException catch (e) {
         throw StorageException('Data file is corrupted.', cause: e);
+      } on TypeError catch (e) {
+        throw StorageException('Data file has invalid structure.', cause: e);
       } on IOException catch (e) {
         throw StorageException('Failed to read expense data.', cause: e);
       }
@@ -124,6 +126,8 @@ class StorageService {
             .toList();
       } on FormatException catch (e) {
         throw StorageException('Data file is corrupted.', cause: e);
+      } on TypeError catch (e) {
+        throw StorageException('Data file has invalid structure.', cause: e);
       } on IOException catch (e) {
         throw StorageException('Failed to read income data.', cause: e);
       }
@@ -158,6 +162,8 @@ class StorageService {
             .toList();
       } on FormatException catch (e) {
         throw StorageException('Data file is corrupted.', cause: e);
+      } on TypeError catch (e) {
+        throw StorageException('Data file has invalid structure.', cause: e);
       } on IOException catch (e) {
         throw StorageException('Failed to read wallet data.', cause: e);
       }
@@ -192,6 +198,8 @@ class StorageService {
             .toList();
       } on FormatException catch (e) {
         throw StorageException('Data file is corrupted.', cause: e);
+      } on TypeError catch (e) {
+        throw StorageException('Data file has invalid structure.', cause: e);
       } on IOException catch (e) {
         throw StorageException('Failed to read reminder data.', cause: e);
       }
@@ -223,7 +231,11 @@ class StorageService {
           final content = await backup.readAsString();
           if (content.trim().isNotEmpty) {
             debugPrint('[Storage] Restored from backup file');
-            return jsonDecode(content) as Map<String, dynamic>;
+            final decoded = jsonDecode(content);
+            if (decoded is! Map<String, dynamic>) {
+              throw const FormatException('Invalid data structure');
+            }
+            return decoded;
           }
         } catch (_) {
           // backup also corrupt, return empty
@@ -234,7 +246,11 @@ class StorageService {
     try {
       final content = await file.readAsString();
       if (content.trim().isEmpty) return {};
-      return jsonDecode(content) as Map<String, dynamic>;
+      final decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Invalid data structure');
+      }
+      return decoded;
     } on FormatException {
       final backup = await _getBackupFile();
       if (await backup.exists()) {
@@ -243,7 +259,11 @@ class StorageService {
           if (content.trim().isNotEmpty) {
             debugPrint('[Storage] Main file corrupt, restored from backup');
             await backup.copy(file.path);
-            return jsonDecode(content) as Map<String, dynamic>;
+            final decoded = jsonDecode(content);
+            if (decoded is! Map<String, dynamic>) {
+              throw const FormatException('Invalid data structure');
+            }
+            return decoded;
           }
         } catch (_) {
           // backup also corrupt

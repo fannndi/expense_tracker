@@ -13,7 +13,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
-    final settings = settingsAsync.valueOrNull ?? const AppSettings();
+    final settings = settingsAsync.value ?? const AppSettings();
     final s = AppStrings.forLocale(settings.locale);
 
     return Scaffold(

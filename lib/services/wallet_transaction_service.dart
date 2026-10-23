@@ -131,7 +131,7 @@ class WalletTransactionService {
     } catch (e) {
       // Only reverse wallet if topUpWallet succeeded
       if (walletUpdated) {
-        final wallets = _ref.read(walletsProvider).valueOrNull ?? [];
+        final wallets = await _ref.read(walletRepositoryProvider).getAll();
         final source = wallets.firstWhere(
           (w) => w.id == sourceId,
           orElse: () => wallets.first,

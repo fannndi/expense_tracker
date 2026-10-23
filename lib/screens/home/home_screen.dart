@@ -27,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final now = DateTime.now();
@@ -216,9 +216,9 @@ class _HeroSectionBuilder extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bal = balance.valueOrNull ?? 0;
-    final inc = incomeTotal.valueOrNull ?? 0;
-    final exp = monthTotal.valueOrNull ?? 0;
+    final bal = balance.value ?? 0;
+    final inc = incomeTotal.value ?? 0;
+    final exp = monthTotal.value ?? 0;
 
     if (balance.isLoading || incomeTotal.isLoading || monthTotal.isLoading) {
       return const SizedBox.shrink();
@@ -239,7 +239,7 @@ class _HeroSectionBuilder extends ConsumerWidget {
 class _WalletSummarySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;

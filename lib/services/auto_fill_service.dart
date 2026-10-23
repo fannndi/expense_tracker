@@ -33,7 +33,7 @@ class AutoFillNotificationService {
     const settings = InitializationSettings(android: androidSettings);
 
     await _plugin.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
@@ -50,7 +50,7 @@ class AutoFillNotificationService {
     if (!_initialized) await init();
 
     // Cancel existing
-    await _plugin.cancel(_notificationId);
+    await _plugin.cancel(id: _notificationId);
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
@@ -74,11 +74,11 @@ class AutoFillNotificationService {
     }
 
     await _plugin.zonedSchedule(
-      _notificationId,
-      'Expense Tracker',
-      'Hari ini belum ada pengeluaran yang dicatat. Entry kosong akan ditambahkan.',
-      scheduled,
-      NotificationDetails(
+      id: _notificationId,
+      title: 'Expense Tracker',
+      body: 'Hari ini belum ada pengeluaran yang dicatat. Entry kosong akan ditambahkan.',
+      scheduledDate: scheduled,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -89,8 +89,6 @@ class AutoFillNotificationService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
 
@@ -99,7 +97,7 @@ class AutoFillNotificationService {
   }
 
   Future<void> cancelReminder() async {
-    await _plugin.cancel(_notificationId);
+    await _plugin.cancel(id: _notificationId);
   }
 
   Future<void> requestPermission() async {

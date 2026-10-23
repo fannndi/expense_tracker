@@ -34,7 +34,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final filter = ref.watch(filterProvider);
@@ -166,7 +166,7 @@ class _FilterPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = strings;
-    final months = allExpenses.whenData(_availableMonths).valueOrNull ?? [];
+    final months = allExpenses.whenData(_availableMonths).value ?? [];
     final theme = Theme.of(context);
 
     return Container(
@@ -228,10 +228,7 @@ class _FilterPanel extends ConsumerWidget {
                   ],
                   onChanged: (v) {
                     if (v == null) {
-                      ref.read(filterProvider.notifier).setMonth(
-                            DateTime.now().year,
-                            DateTime.now().month,
-                          );
+                      ref.read(filterProvider.notifier).clearMonth();
                     } else {
                       ref
                           .read(filterProvider.notifier)

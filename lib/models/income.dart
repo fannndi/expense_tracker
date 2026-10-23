@@ -32,17 +32,11 @@ enum IncomeType {
     }
   }
 
-  static IncomeType fromJson(String value) {
-    switch (value) {
-      case 'allowance':
-        return IncomeType.allowance;
-      case 'from_person':
-        return IncomeType.fromPerson;
-      case 'project':
-        return IncomeType.project;
-      default:
-        return IncomeType.other;
+  static IncomeType fromJson(String? value) {
+    for (final type in IncomeType.values) {
+      if (type.name == value || type.jsonKey == value) return type;
     }
+    return IncomeType.other;
   }
 }
 
@@ -91,8 +85,8 @@ class Income {
   factory Income.fromJson(Map<String, dynamic> json) {
     return Income(
       id: json['id'] as String,
-      date: DateTime.parse(json['date'] as String),
-      type: IncomeType.fromJson(json['type'] as String),
+      date: DateTime.parse(json['date'] as String).toLocal(),
+      type: IncomeType.fromJson(json['type'] as String?),
       amount: json['amount'] as int,
       source: json['source'] as String?,
       note: json['note'] as String?,

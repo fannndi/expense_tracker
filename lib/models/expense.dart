@@ -57,7 +57,7 @@ class Expense {
   factory Expense.fromJson(Map<String, dynamic> json) {
     return Expense(
       id: json['id'] as String,
-      date: DateTime.parse(json['date'] as String),
+      date: DateTime.parse(json['date'] as String).toLocal(),
       category: json['category'] as String,
       amount: json['amount'] as int,
       note: json['note'] as String?,

@@ -21,7 +21,7 @@ class CategoryAnalysisCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;

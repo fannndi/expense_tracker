@@ -82,8 +82,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.editExpense,
       builder: (context, state) {
-        final expense = state.extra as Expense;
-        return EditExpenseScreen(expense: expense);
+        final extra = state.extra;
+        if (extra is! Expense) return const HomeScreen();
+        return EditExpenseScreen(expense: extra);
       },
     ),
     GoRoute(
@@ -93,8 +94,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.editIncome,
       builder: (context, state) {
-        final income = state.extra as Income;
-        return EditIncomeScreen(income: income);
+        final extra = state.extra;
+        if (extra is! Income) return const HomeScreen();
+        return EditIncomeScreen(income: extra);
       },
     ),
     GoRoute(
@@ -104,8 +106,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.editWallet,
       builder: (context, state) {
-        final wallet = state.extra as Wallet;
-        return AddWalletScreen(initialWallet: wallet);
+        final extra = state.extra;
+        if (extra is! Wallet) return const HomeScreen();
+        return AddWalletScreen(initialWallet: extra);
       },
     ),
     GoRoute(
@@ -119,9 +122,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.addReminder,
       builder: (context, state) {
-        return AddReminderScreen(
-          initialReminder: state.extra != null ? state.extra as Reminder? : null,
-        );
+        final extra = state.extra;
+        final initial = extra is Reminder ? extra : null;
+        return AddReminderScreen(initialReminder: initial);
       },
     ),
   ],

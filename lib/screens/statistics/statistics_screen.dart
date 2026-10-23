@@ -19,7 +19,7 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final selectedMonth = ref.watch(selectedMonthProvider);
@@ -186,9 +186,9 @@ class _MonthlyBalanceSummary extends ConsumerWidget {
     );
 
     final totalIncome =
-        incomeBreakdown.valueOrNull?.values.fold(0, (a, b) => a + b) ?? 0;
+        incomeBreakdown.value?.values.fold(0, (a, b) => a + b) ?? 0;
     final totalExpense =
-        expBreakdown.valueOrNull?.fold(0, (sum, s) => sum + s.total) ?? 0;
+        expBreakdown.value?.fold(0, (sum, s) => sum + s.total) ?? 0;
     final balance = totalIncome - totalExpense;
 
     if (totalIncome == 0 && totalExpense == 0) return const SizedBox.shrink();

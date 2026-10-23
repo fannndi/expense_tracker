@@ -36,7 +36,7 @@ class _PeriodSelectorSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef widgetRef) {
-    final settings = widgetRef.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = widgetRef.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final now = DateTime.now();
@@ -202,7 +202,7 @@ class _PeriodSelectorSheet extends ConsumerWidget {
 }
 
 /// Filters data by [start]..[end], builds [ReportData], generates PDF,
-/// and shares it via [Share.shareXFiles].
+/// and shares it via [SharePlus.instance.share].
 Future<void> _generateAndSharePdf(
   BuildContext context,
   WidgetRef ref,
@@ -230,9 +230,9 @@ Future<void> _generateAndSharePdf(
 
   try {
     final allExpenses =
-        ref.read(expensesProvider).valueOrNull ?? <Expense>[];
+        ref.read(expensesProvider).value ?? <Expense>[];
     final allIncomes =
-        ref.read(incomesProvider).valueOrNull ?? <Income>[];
+        ref.read(incomesProvider).value ?? <Income>[];
 
     // Filter by date range (compare date-only, time-stripped)
     bool inRange(DateTime date) {
@@ -273,9 +273,8 @@ Future<void> _generateAndSharePdf(
 
     if (context.mounted) {
       Navigator.of(context).pop(); // dismiss loading
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Expense Report – $label',
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'Expense Report – $label'),
       );
     }
   } catch (e) {

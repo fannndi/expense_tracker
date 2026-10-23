@@ -27,7 +27,7 @@ class ExpenseListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings =
-        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.watch(settingsProvider).value ?? const AppSettings();
     final s = AppStrings.forLocale(settings.locale);
 
     final isAutoFill = expense.isAutoFill;
@@ -42,7 +42,7 @@ class ExpenseListTile extends ConsumerWidget {
     // Get wallet name if walletId exists
     String? walletName;
     if (expense.walletId != null) {
-      final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+      final wallets = ref.watch(walletsProvider).value ?? [];
       final wallet = wallets.where((w) => w.id == expense.walletId).firstOrNull;
       walletName = wallet?.name;
     }

@@ -25,7 +25,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
     String? note,
     String? walletId,
   }) async {
-    final settings = ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.read(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     setState(() => _loading = true);
@@ -52,7 +52,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     return Scaffold(

@@ -163,7 +163,7 @@ final currentMonthBalanceProvider = Provider<AsyncValue<int>>((ref) {
   final income = ref.watch(currentMonthIncomeTotalProvider);
   final expense = ref.watch(currentMonthTotalProvider);
   return income.whenData((inc) {
-    final exp = expense.valueOrNull ?? 0;
+    final exp = expense.value ?? 0;
     return inc - exp;
   });
 });
@@ -211,7 +211,7 @@ class AllowancePeriod {
 
 final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
   final incomesAsync = ref.watch(incomesProvider);
-  final allIncomes = incomesAsync.valueOrNull ?? [];
+  final allIncomes = incomesAsync.value ?? [];
 
   final allowances = allIncomes
       .where((i) => i.type == IncomeType.allowance)
@@ -236,7 +236,7 @@ final allowancePeriodsProvider = Provider<List<AllowancePeriod>>((ref) {
       end = DateTime(next.year, next.month, next.day)
           .subtract(const Duration(days: 1));
     } else {
-      end = todayMidnight.subtract(const Duration(days: 1));
+      end = todayMidnight;
     }
     if (end.isBefore(start)) continue;
 

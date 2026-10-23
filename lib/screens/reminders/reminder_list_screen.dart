@@ -19,7 +19,7 @@ class ReminderListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = AppStrings.forLocale(settings.locale);
     final remindersAsync = ref.watch(remindersProvider);
 
@@ -102,7 +102,7 @@ class _ReminderTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = AppStrings.forLocale(settings.locale);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;

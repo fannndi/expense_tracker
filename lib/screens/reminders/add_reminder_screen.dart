@@ -67,7 +67,7 @@ class _AddReminderScreenState extends ConsumerState<AddReminderScreen> {
 
   AppStrings _strings() {
     final settings =
-        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.watch(settingsProvider).value ?? const AppSettings();
     return AppStrings.forLocale(settings.locale);
   }
 
@@ -294,7 +294,7 @@ class _AddReminderScreenState extends ConsumerState<AddReminderScreen> {
   }
 
   Widget _buildWalletPicker(AppStrings s) {
-    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+    final wallets = ref.watch(walletsProvider).value ?? [];
     return DropdownButtonFormField<String>(
       initialValue: _selectedWalletId,
       decoration: InputDecoration(

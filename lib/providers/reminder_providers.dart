@@ -71,7 +71,7 @@ class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
 
   /// Cari reminder by ID dari state
   Reminder? findById(String id) {
-    final list = state.valueOrNull;
+    final list = state.value;
     if (list == null) return null;
     try {
       return list.firstWhere((r) => r.id == id);

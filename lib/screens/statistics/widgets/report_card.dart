@@ -20,7 +20,7 @@ class ReportCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final theme = Theme.of(context);
@@ -32,7 +32,7 @@ class ReportCard extends ConsumerWidget {
       ),
     );
 
-    final hasData = expenses.valueOrNull != null;
+    final hasData = expenses.value != null;
 
     return Card(
       child: Padding(
@@ -70,9 +70,9 @@ class ReportCard extends ConsumerWidget {
                         ? null
                         : () => _shareText(
                               context,
-                              expenses.valueOrNull!,
-                              incomes.valueOrNull ?? [],
-                              breakdown.valueOrNull ?? [],
+                              expenses.value!,
+                              incomes.value ?? [],
+                              breakdown.value ?? [],
                             ),
                   ),
                 ),
@@ -122,9 +122,11 @@ class ReportCard extends ConsumerWidget {
     final data = _buildReportData(expenses, incomes, breakdown);
     final service = ReportService();
     final text = service.generateTextReport(data);
-    await Share.share(
-      text,
-      subject: 'Expense Report - ${DateFormatter.formatMonthYear(month)}',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: 'Expense Report - ${DateFormatter.formatMonthYear(month)}',
+      ),
     );
   }
 }

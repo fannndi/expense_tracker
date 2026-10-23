@@ -48,6 +48,12 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
   }
 
   Future<void> deleteWallet(String id) async {
+    final expenses = await ref.read(expenseRepositoryProvider).getAll();
+    final incomes = await ref.read(incomeRepositoryProvider).getAll();
+    if (expenses.any((e) => e.walletId == id) ||
+        incomes.any((i) => i.walletId == id)) {
+      throw Exception('Wallet is still in use');
+    }
     await ref.read(walletRepositoryProvider).delete(id);
     await reload();
   }
@@ -56,7 +62,7 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
   /// Tidak ada pengecekan saldo agar wallet bisa negatif (realistis untuk
   /// kartu kredit / e-money yang mungkin dipakai meski catatan saldo kosong)
   Future<void> debitFromWallet(String walletId, int amount) async {
-    final wallets = state.valueOrNull ?? [];
+    final wallets = await ref.read(walletRepositoryProvider).getAll();
     final wallet = wallets.firstWhere(
       (w) => w.id == walletId,
       orElse: () => throw Exception('Wallet not found'),
@@ -66,7 +72,7 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
 
   /// Tambah saldo wallet (untuk credit dari income atau refund expense)
   Future<void> creditWallet(String walletId, int amount) async {
-    final wallets = state.valueOrNull ?? [];
+    final wallets = await ref.read(walletRepositoryProvider).getAll();
     final wallet = wallets.firstWhere(
       (w) => w.id == walletId,
       orElse: () => throw Exception('Wallet not found'),
@@ -76,7 +82,7 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
 
   /// Tambah saldo wallet (untuk refund saat delete expense)
   Future<void> refundToWallet(String walletId, int amount) async {
-    final wallets = state.valueOrNull ?? [];
+    final wallets = await ref.read(walletRepositoryProvider).getAll();
     final wallet = wallets.firstWhere(
       (w) => w.id == walletId,
       orElse: () => throw Exception('Wallet not found'),
@@ -90,7 +96,14 @@ class WalletsNotifier extends AsyncNotifier<List<Wallet>> {
     required String destId,
     required int amount,
   }) async {
-    final wallets = state.valueOrNull ?? [];
+    if (sourceId == destId) {
+      throw Exception('Source and destination wallet must be different');
+    }
+    if (amount <= 0) {
+      throw Exception('Amount must be greater than zero');
+    }
+
+    final wallets = await ref.read(walletRepositoryProvider).getAll();
     final source = wallets.firstWhere(
       (w) => w.id == sourceId,
       orElse: () => throw Exception('Source wallet not found'),
@@ -148,7 +161,7 @@ final grandTotalBalanceProvider = Provider<AsyncValue<int>>((ref) {
   );
 
   return totalIncome.whenData((inc) {
-    final exp = totalExpense.valueOrNull ?? 0;
+    final exp = totalExpense.value ?? 0;
     return inc - exp;
   });
 });

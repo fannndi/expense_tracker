@@ -39,7 +39,7 @@ class _AddWalletScreenState extends ConsumerState<AddWalletScreen> {
 
   AppStrings get _s {
     final settings =
-        ref.read(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.read(settingsProvider).value ?? const AppSettings();
     return settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
   }
 

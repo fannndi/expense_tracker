@@ -18,10 +18,11 @@ class ExpenseFilter {
     String? searchNote,
     bool clearCategory = false,
     bool clearSearchNote = false,
+    bool clearMonth = false,
   }) {
     return ExpenseFilter(
-      year: year ?? this.year,
-      month: month ?? this.month,
+      year: clearMonth ? null : (year ?? this.year),
+      month: clearMonth ? null : (month ?? this.month),
       category: clearCategory ? null : (category ?? this.category),
       searchNote: clearSearchNote ? null : (searchNote ?? this.searchNote),
     );

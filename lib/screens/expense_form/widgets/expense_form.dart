@@ -76,7 +76,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
     // Default wallet: first cash wallet if none selected
     if (_selectedWalletId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final wallets = ref.read(walletsProvider).valueOrNull ?? [];
+        final wallets = ref.read(walletsProvider).value ?? [];
         final cashWallets =
             wallets.where((w) => w.type == WalletType.cash).toList();
         if (cashWallets.isNotEmpty && mounted) {
@@ -115,7 +115,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
   }
 
   Widget _buildWalletPicker(AppStrings s) {
-    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+    final wallets = ref.watch(walletsProvider).value ?? [];
 
     return DropdownButtonFormField<String>(
       initialValue: _selectedWalletId,
@@ -222,7 +222,7 @@ class _ExpenseFormState extends ConsumerState<ExpenseForm> {
 
   AppStrings _strings() {
     final settings =
-        ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+        ref.watch(settingsProvider).value ?? const AppSettings();
     return AppStrings.forLocale(settings.locale);
   }
 

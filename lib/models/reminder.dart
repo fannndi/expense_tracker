@@ -142,9 +142,9 @@ class Reminder {
       ),
       dayOfMonth: json['dayOfMonth'] as int?,
       customIntervalDays: json['customIntervalDays'] as int?,
-      nextDueDate: DateTime.parse(json['nextDueDate'] as String),
+      nextDueDate: DateTime.parse(json['nextDueDate'] as String).toLocal(),
       isActive: json['isActive'] as bool? ?? true,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
       notificationId: json['notificationId'] as int? ?? notificationIdFor(id),
     );
   }

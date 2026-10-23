@@ -33,7 +33,7 @@ class IncomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final theme = Theme.of(context);
@@ -255,7 +255,7 @@ class _IncomeTypeBreakdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = settings.locale == const Locale('id') ? AppStrings.id : AppStrings.en;
 
     final breakdown = ref.watch(
@@ -348,7 +348,7 @@ class _IncomeTile extends ConsumerWidget {
     final typeLabel = _localizedTypeLabel(income.type, s);
 
     // Find wallet info
-    final wallets = ref.watch(walletsProvider).valueOrNull ?? [];
+    final wallets = ref.watch(walletsProvider).value ?? [];
     final wallet = income.walletId != null
         ? wallets.where((w) => w.id == income.walletId).firstOrNull
         : null;

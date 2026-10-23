@@ -17,13 +17,13 @@ class TodayRemindersSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsProvider).valueOrNull ?? const AppSettings();
+    final settings = ref.watch(settingsProvider).value ?? const AppSettings();
     final s = AppStrings.forLocale(settings.locale);
     final dueAsync = ref.watch(dueRemindersProvider);
     final expensesAsync = ref.watch(expensesProvider);
 
-    final due = dueAsync.valueOrNull ?? [];
-    final expenses = expensesAsync.valueOrNull ?? [];
+    final due = dueAsync.value ?? [];
+    final expenses = expensesAsync.value ?? [];
 
     if (due.isEmpty) return const SizedBox.shrink();
 
