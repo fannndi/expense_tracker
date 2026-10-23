@@ -6,6 +6,7 @@ import '../../l10n/app_strings.dart';
 import '../../providers/settings_provider.dart';
 import '../../routes/app_router.dart';
 import '../../services/backup_service.dart';
+import '../../utils/design_tokens.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -66,13 +67,13 @@ class SettingsScreen extends ConsumerWidget {
                 );
               }
             },
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
           ),
           ListTile(
             leading: Icon(Icons.download_outlined, color: Theme.of(context).colorScheme.primary),
             title: Text(s.importData, style: Theme.of(context).textTheme.bodyLarge),
             onTap: () => _showImportDialog(context, ref, s),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
           ),
           const Divider(height: 1),
           _SectionHeader(label: s.reminders),
@@ -81,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(s.reminders, style: Theme.of(context).textTheme.bodyLarge),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(AppRoutes.reminders),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
           ),
           const Divider(height: 1),
           _SectionHeader(label: s.about),
@@ -126,7 +127,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 6),
+      padding: const EdgeInsets.fromLTRB(DesignTokens.space20, DesignTokens.space20, DesignTokens.space20, DesignTokens.space8 - 2),
       child: Text(
         label.toUpperCase(),
         style: theme.textTheme.labelSmall?.copyWith(
@@ -159,7 +160,7 @@ class _OptionTile extends StatelessWidget {
           ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
           : null,
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20),
     );
   }
 }
@@ -171,7 +172,7 @@ class _AboutTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.space20, vertical: DesignTokens.space12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
