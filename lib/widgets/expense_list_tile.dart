@@ -26,8 +26,9 @@ class ExpenseListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings =
-        ref.watch(settingsProvider).value ?? const AppSettings();
+    final settings = ref.watch(
+        settingsProvider.select((async) => async.value ?? const AppSettings()),
+      );
     final s = AppStrings.forLocale(settings.locale);
 
     final isAutoFill = expense.isAutoFill;
