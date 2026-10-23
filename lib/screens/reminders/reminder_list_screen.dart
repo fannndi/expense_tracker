@@ -10,6 +10,7 @@ import '../../routes/app_router.dart';
 import '../../utils/category_color.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
+import '../../utils/design_tokens.dart';
 import '../../widgets/category_icon.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/loading_view.dart';
@@ -37,7 +38,7 @@ class ReminderListScreen extends ConsumerWidget {
           if (reminders.isEmpty) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(DesignTokens.space32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -46,7 +47,7 @@ class ReminderListScreen extends ConsumerWidget {
                       size: 72,
                       color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space16),
                     Text(
                       s.noReminders,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -54,7 +55,7 @@ class ReminderListScreen extends ConsumerWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: DesignTokens.space16),
                     FilledButton.icon(
                       onPressed: () => context.push(AppRoutes.addReminder),
                       icon: const Icon(Icons.add, size: 18),
@@ -78,7 +79,7 @@ class ReminderListScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             itemCount: sorted.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, __) => const SizedBox(height: DesignTokens.space8),
             itemBuilder: (context, index) {
               final reminder = sorted[index];
               return _ReminderTile(reminder: reminder);
