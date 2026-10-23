@@ -10,6 +10,7 @@ import '../../providers/settings_provider.dart';
 import '../../routes/app_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_formatter.dart';
+import '../../utils/design_tokens.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/expense_list_tile.dart';
@@ -65,7 +66,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
           // Search bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(DesignTokens.space16, DesignTokens.space8, DesignTokens.space16, 0),
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
@@ -171,7 +172,7 @@ class _FilterPanel extends ConsumerWidget {
 
     return Container(
       color: theme.colorScheme.surfaceContainerLow,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(DesignTokens.space16, DesignTokens.space12, DesignTokens.space16, DesignTokens.space12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
